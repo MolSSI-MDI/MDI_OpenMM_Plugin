@@ -57,10 +57,16 @@ void ExampleForceImpl::initialize(ContextImpl& context) {
 }
 
 double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeForces, bool includeEnergy, int groups) {
+    printf("   @FORCES\n");
     if ((groups&(1<<owner.getForceGroup())) != 0)
         return kernel.getAs<CalcExampleForceKernel>().execute(context, includeForces, includeEnergy);
     return 0.0;
 }
+
+void ExampleForceImpl::updateContextState(OpenMM::ContextImpl& context, bool& forcesInvalid) {
+    printf("   @UPDATE\n");
+}
+
 
 std::vector<std::string> ExampleForceImpl::getKernelNames() {
     std::vector<std::string> names;
