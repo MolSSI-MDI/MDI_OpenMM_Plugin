@@ -1,5 +1,5 @@
 set(WRAP_FILE ExamplePluginWrapper.cpp)
-set(MODULE_NAME exampleplugin)
+set(MODULE_NAME openmmmdi)
 
 # Execute SWIG to generate source code for the Python module.
 
