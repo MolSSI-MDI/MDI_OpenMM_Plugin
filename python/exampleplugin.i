@@ -17,6 +17,7 @@ namespace std {
 
 %{
 #include "ExampleForce.h"
+#include "MDIServer.h"
 #include "OpenMM.h"
 #include "OpenMMAmoeba.h"
 #include "OpenMMDrude.h"
@@ -40,6 +41,12 @@ import simtk.unit as unit
 
 
 namespace ExamplePlugin {
+
+class MDIServer {
+public:
+    MDIServer();
+    void start();
+};
 
 class ExampleForce : public OpenMM::Force {
 public:
