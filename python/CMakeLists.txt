@@ -1,5 +1,16 @@
-set(WRAP_FILE ExamplePluginWrapper.cpp)
+set(PACKAGE_NAME openmmmdi)
+set(WRAP_FILE ${PACKAGE_NAME}/ExamplePluginWrapper.cpp)
 set(MODULE_NAME openmmmdi)
+
+# OPENMM_PYTHON_STAGING_DIR is a staging area for python, swig, and C files in the python package we are making.
+set(OPENMM_PYTHON_STAGING_DIR "${CMAKE_BINARY_DIR}/python"
+    CACHE PATH "Temporary staging area for Python API wrappers")
+mark_as_advanced(OPENMM_PYTHON_STAGING_DIR)
+
+# Create package directory structure
+file(MAKE_DIRECTORY ${OPENMM_PYTHON_STAGING_DIR}/${PACKAGE_NAME})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PACKAGE_NAME}/mdisimulation.py ${OPENMM_PYTHON_STAGING_DIR}/${PACKAGE_NAME}/mdisimulation.py)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PACKAGE_NAME}/__init__.py ${OPENMM_PYTHON_STAGING_DIR}/${PACKAGE_NAME}/__init__.py)
 
 # Execute SWIG to generate source code for the Python module.
 

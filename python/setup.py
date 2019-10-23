@@ -16,8 +16,8 @@ if platform.system() == 'Darwin':
     extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
     extra_link_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7', '-Wl', '-rpath', openmm_dir+'/lib']
 
-extension = Extension(name='_openmmmdi',
-                      sources=['ExamplePluginWrapper.cpp'],
+extension = Extension(name='openmmmdi._openmmmdi',
+                      sources=['openmmmdi/ExamplePluginWrapper.cpp'],
                       libraries=['OpenMM', 'ExamplePlugin'],
                       include_dirs=[os.path.join(openmm_dir, 'include'), openmmmdi_header_dir],
                       library_dirs=[os.path.join(openmm_dir, 'lib'), openmmmdi_library_dir],
@@ -27,6 +27,6 @@ extension = Extension(name='_openmmmdi',
 
 setup(name='openmmmdi',
       version='1.0',
-      py_modules=['openmmmdi'],
+      packages=['openmmmdi'],
       ext_modules=[extension],
      )
