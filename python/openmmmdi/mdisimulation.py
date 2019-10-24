@@ -9,7 +9,7 @@ class MDISimulation(mmapp.Simulation):
         server = MDIServer(system)
 
         ## Add the MDI force
-        force = ExampleForce()
+        force = ExampleForce(server)
         system.addForce(force)
 
         ## NOTE: AT THIS POINT, SHOULD SET A FLAG THAT PREVENTS THE FORCES FROM ACTUALLY LISTENING FOR COMMANDS

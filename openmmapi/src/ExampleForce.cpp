@@ -38,7 +38,7 @@ using namespace ExamplePlugin;
 using namespace OpenMM;
 using namespace std;
 
-ExampleForce::ExampleForce() {
+ExampleForce::ExampleForce(MDIServer& server) : server(server) {
 }
 
 int ExampleForce::addBond(int particle1, int particle2, double length, double k) {
