@@ -12,6 +12,13 @@ set( MDI_LOCATION ${CMAKE_BINARY_DIR}/lib/mdi/MDI_Library/ )
 link_directories( ${MDI_LOCATION} )
 include_directories(${MDI_LOCATION})
 
+# Link to MPI if available
+
+find_package(MPI)
+if(MPI_FOUND)
+   include_directories(${MPI_INCLUDE_PATH})
+endif()
+
 # We need to know where OpenMM is installed so we can access the headers and libraries.
 SET(OPENMM_DIR "/usr/local/openmm" CACHE PATH "Where OpenMM is installed")
 INCLUDE_DIRECTORIES("${OPENMM_DIR}/include")
@@ -76,6 +83,19 @@ SET_TARGET_PROPERTIES(${SHARED_EXAMPLE_TARGET}
     LINK_FLAGS "${EXTRA_COMPILE_FLAGS}")
 TARGET_LINK_LIBRARIES(${SHARED_EXAMPLE_TARGET} OpenMM)
 INSTALL_TARGETS(/lib RUNTIME_DIRECTORY /lib ${SHARED_EXAMPLE_TARGET})
+
+# Ensure that MPI is properly linked
+if(NOT MPI_FOUND)
+    target_include_directories(${SHARED_EXAMPLE_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/mdi/MDI_Library/STUBS_MPI/)
+endif()
+if(MPI_COMPILE_FLAGS)
+   set_target_properties(${SHARED_EXAMPLE_TARGET} PROPERTIES
+      COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif()
+if(MPI_LINK_FLAGS)
+   set_target_properties(${SHARED_EXAMPLE_TARGET} PROPERTIES
+      LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif()
 
 # install headers
 FILE(GLOB API_ONLY_INCLUDE_FILES "openmmapi/include/*.h")

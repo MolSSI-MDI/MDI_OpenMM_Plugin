@@ -38,6 +38,7 @@
 //////////
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/NonbondedForce.h"
+#include <mpi.h>
 //////////
 
 using namespace ExamplePlugin;
