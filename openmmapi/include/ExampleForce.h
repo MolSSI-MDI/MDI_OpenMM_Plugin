@@ -40,13 +40,6 @@
 
 namespace ExamplePlugin {
 
-  /*
-class OPENMM_EXPORT_EXAMPLE MDIServer {
-public:
-    MDIServer();
-    void start();
-    };*/
-
 /**
  * This class implements an anharmonic bond force of the form E(r)=k*(r-length)^4.  It exists to
  * serve as an example of how to write plugins.
@@ -111,6 +104,12 @@ public:
      */
     bool usesPeriodicBoundaryConditions() const {
         return false;
+    }
+    /**
+     * Returns the server
+     */
+    MDIServer& getServer() const {
+      return this->server;
     }
 protected:
     OpenMM::ForceImpl* createImpl() const;

@@ -52,9 +52,13 @@ public:
      */
     MDIServer(OpenMM::System& system);
     /**
-     * Run the MDIServer.
+     * Initialize the MDIServer.
      */
-    void start();
+    void init(std::string mdi_options);
+    /**
+     * Listen for commands from the external driver.
+     */
+    void listen(std::string node);
 private:
     OpenMM::System& system;
 };

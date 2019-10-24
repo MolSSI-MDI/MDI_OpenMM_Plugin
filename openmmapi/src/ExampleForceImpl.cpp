@@ -41,6 +41,7 @@
 #include <set>
 #include <sstream>
 //////////
+#include "MDIServer.h"
 #include "openmm/NonbondedForce.h"
 //////////
 
@@ -62,6 +63,7 @@ void ExampleForceImpl::initialize(ContextImpl& context) {
 double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeForces, bool includeEnergy, int groups) {
     printf("   @FORCES\n");
     const OpenMM::System& system = context.getSystem();
+    MDIServer& server = owner.getServer();
 
     // <COORDS
     vector<Vec3> positions;

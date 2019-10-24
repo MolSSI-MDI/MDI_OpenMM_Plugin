@@ -45,7 +45,8 @@ namespace ExamplePlugin {
 class MDIServer {
 public:
     MDIServer(OpenMM::System& system);
-    void start();
+    void init(std::string mdi_options);
+    void listen(std::string node);
 };
 
 class ExampleForce : public OpenMM::Force {

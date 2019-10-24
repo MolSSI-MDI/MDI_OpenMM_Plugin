@@ -35,6 +35,9 @@
 #include "openmm/OpenMMException.h"
 #include "openmm/internal/AssertionUtilities.h"
 #include "mdi.h"
+//////////
+#include "openmm/NonbondedForce.h"
+//////////
 
 using namespace ExamplePlugin;
 using namespace OpenMM;
@@ -43,6 +46,10 @@ using namespace std;
 MDIServer::MDIServer(OpenMM::System& system) : system(system) {
 }
 
-void MDIServer::start() {
+void MDIServer::init(string mdi_options) {
     printf("BBBBBBBBBBBBBBBBBBBBBBB\n");
+}
+
+void MDIServer::listen(string node) {
+    printf("CCCCCCCCCCCCCCCCCCCCCCC\n");
 }
