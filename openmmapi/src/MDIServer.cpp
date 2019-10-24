@@ -44,7 +44,7 @@ using namespace ExamplePlugin;
 using namespace OpenMM;
 using namespace std;
 
-MDIServer::MDIServer(OpenMM::System& system) : system(system) {
+MDIServer::MDIServer() {
 }
 
 void MDIServer::init(string mdi_options) {

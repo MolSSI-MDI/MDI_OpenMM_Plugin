@@ -50,7 +50,7 @@ public:
     /**
      * Create an MDIServer.
      */
-    MDIServer(OpenMM::System& system);
+    MDIServer();
     /**
      * Initialize the MDIServer.
      */
@@ -59,8 +59,6 @@ public:
      * Listen for commands from the external driver.
      */
     void listen(OpenMM::ContextImpl& context, std::string node);
-private:
-    OpenMM::System& system;
 };
 
 

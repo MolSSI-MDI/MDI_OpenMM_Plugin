@@ -6,7 +6,7 @@ from .openmmmdi import ExampleForce, MDIServer
 class MDISimulation(mmapp.Simulation):
     def __init__(self, mdiOptions, topology, system, integrator, platform=None, platformProperties=None, state=None):
         ## Create an MDI server object
-        server = MDIServer(system)
+        server = MDIServer()
 
         ## Add the MDI force
         force = ExampleForce(server)
