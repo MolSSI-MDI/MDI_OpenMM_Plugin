@@ -34,6 +34,7 @@
 
 #include "ExampleForce.h"
 #include "openmm/Context.h"
+#include "openmm/System.h"
 #include "openmm/Force.h"
 #include <vector>
 #include "internal/windowsExportExample.h"
@@ -49,11 +50,13 @@ public:
     /**
      * Create an MDIServer.
      */
-    MDIServer();
+    MDIServer(OpenMM::System& system);
     /**
      * Run the MDIServer.
      */
     void start();
+private:
+    OpenMM::System& system;
 };
 
 

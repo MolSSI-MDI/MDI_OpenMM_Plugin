@@ -1,10 +1,13 @@
 import simtk.openmm as mm
 import simtk.openmm.app as mmapp
 import simtk.unit as mmunit
-from .openmmmdi import ExampleForce
+from .openmmmdi import ExampleForce, MDIServer
 
 class MDISimulation(mmapp.Simulation):
     def __init__(self, mdiOptions, topology, system, integrator, platform=None, platformProperties=None, state=None):
+        ## Create an MDI server object
+        server = MDIServer(system)
+
         ## Add the MDI force
         force = ExampleForce()
         system.addForce(force)

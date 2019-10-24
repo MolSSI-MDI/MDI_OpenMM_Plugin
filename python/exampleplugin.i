@@ -44,7 +44,7 @@ namespace ExamplePlugin {
 
 class MDIServer {
 public:
-    MDIServer();
+    MDIServer(OpenMM::System& system);
     void start();
 };
 
