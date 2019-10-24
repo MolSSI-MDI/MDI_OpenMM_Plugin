@@ -36,6 +36,7 @@
 #include "openmm/internal/AssertionUtilities.h"
 #include "mdi.h"
 //////////
+#include "openmm/internal/ContextImpl.h"
 #include "openmm/NonbondedForce.h"
 //////////
 
@@ -50,6 +51,80 @@ void MDIServer::init(string mdi_options) {
     printf("BBBBBBBBBBBBBBBBBBBBBBB\n");
 }
 
-void MDIServer::listen(string node) {
+void MDIServer::listen(ContextImpl& context, string node) {
     printf("CCCCCCCCCCCCCCCCCCCCCCC\n");
+    const OpenMM::System& system = context.getSystem();
+
+    // <COORDS
+    vector<Vec3> positions;
+    context.getPositions(positions);
+    printf("      pos: %f %f %f\n",positions[0][0],positions[0][1],positions[0][2]);
+
+    // <VELOCITIES
+    vector<Vec3> velocities;
+    context.getVelocities(velocities);
+    printf("      vel: %f %f %f\n",velocities[0][0],velocities[0][1],velocities[0][2]);
+
+    // <FORCES
+    vector<Vec3> forces;
+    context.getForces(forces);
+    printf("      for: %f %f %f\n",forces[0][0],forces[0][1],forces[0][2]);
+
+    // <TIME
+    double time = context.getTime();
+    printf("      time: %f\n",time);
+
+    // <NATOMS
+    int natom = system.getNumParticles();
+    printf("      natoms: %d\n",natom);
+
+    // <CHARGES
+    // identify the NonbondedForce, if any
+    int nforce = system.getNumForces();
+    printf("      nforces: %d\n",nforce);
+    int nbnd_index = -1;
+    for (int iforce=0; iforce < nforce; iforce++) {
+      const Force& force = system.getForce(iforce);
+      if ( dynamic_cast<const NonbondedForce*>( &force ) ){
+	printf("      %d TRUE\n",iforce);
+	nbnd_index = iforce;
+      }
+      else {
+	printf("      %d FALSE\n",iforce);
+      }
+    }
+    const Force& nbnd_temp = system.getForce(nbnd_index);
+    const NonbondedForce* nbnd_force = dynamic_cast<const NonbondedForce*>( &nbnd_temp );
+    double charge = 0.0;
+    double sigma = 0.0;
+    double epsilon = 0.0;
+    nbnd_force->getParticleParameters(0, charge, sigma, epsilon);
+    printf("      charge: %f\n",charge);
+    //nbnd_force->setParticleParameters(0, 0.2, sigma, epsilon);
+
+    // <DIMENSIONS
+    bool periodic = nbnd_force->usesPeriodicBoundaryConditions();
+    printf("      periodic: %d\n",periodic);
+
+    // <CELL
+    Vec3 cell1;
+    Vec3 cell2;
+    Vec3 cell3;
+    context.getPeriodicBoxVectors(cell1, cell2, cell3);
+
+    // >CELL
+    context.getOwner().setPeriodicBoxVectors(cell1, cell2, cell3);
+
+    // <ENERGY
+    // Compiles, but should be called outside the time step
+    //State state = context.getOwner().getState( State::Energy );
+    //double ke = state.getKineticEnergy();
+    //double pe = state.getPotentialEnergy();
+
+    // <MASSES
+    double mass;
+    mass = system.getParticleMass(0);
+    printf("      mass: %f\n",mass);
+
+
 }

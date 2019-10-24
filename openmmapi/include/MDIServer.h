@@ -58,7 +58,7 @@ public:
     /**
      * Listen for commands from the external driver.
      */
-    void listen(std::string node);
+    void listen(OpenMM::ContextImpl& context, std::string node);
 private:
     OpenMM::System& system;
 };
