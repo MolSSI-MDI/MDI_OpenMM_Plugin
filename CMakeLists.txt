@@ -4,6 +4,14 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+# Compile the MDI Library
+add_subdirectory(lib)
+
+# Link to MDI
+set( MDI_LOCATION ${CMAKE_BINARY_DIR}/lib/mdi/MDI_Library/ )
+link_directories( ${MDI_LOCATION} )
+include_directories(${MDI_LOCATION})
+
 # We need to know where OpenMM is installed so we can access the headers and libraries.
 SET(OPENMM_DIR "/usr/local/openmm" CACHE PATH "Where OpenMM is installed")
 INCLUDE_DIRECTORIES("${OPENMM_DIR}/include")

@@ -34,6 +34,7 @@
 #include "internal/ExampleForceImpl.h"
 #include "openmm/OpenMMException.h"
 #include "openmm/internal/AssertionUtilities.h"
+#include "mdi.h"
 
 using namespace ExamplePlugin;
 using namespace OpenMM;
