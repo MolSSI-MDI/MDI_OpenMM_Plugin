@@ -108,6 +108,28 @@ public:
      * Respond to <MASSES.
      */
     std::vector<double> send_masses(OpenMM::ContextImpl& context);
+    /**
+     * Additional responses needed:
+     * @
+     * <@
+     * <COMMANDS
+     * @COORDS
+     * >COORDS
+     * <KE
+     * <PE
+     * <KE_NUC
+     * <PE_NUC
+     * EXIT
+     * @FORCES
+     * +FORCES
+     * >FORCES
+     * <GLOBAL
+     * @INIT_MD
+     * @INIT_OPTG
+     * <NCOMMANDS
+     * @PRE-FORCES
+     * >VELOCITIES
+     */
 };
 
 
