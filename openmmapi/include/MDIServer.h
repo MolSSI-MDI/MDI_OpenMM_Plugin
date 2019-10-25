@@ -38,6 +38,7 @@
 #include "openmm/Force.h"
 #include <vector>
 #include "internal/windowsExportExample.h"
+#include "openmm/NonbondedForce.h"
 
 namespace ExamplePlugin {
 
@@ -59,6 +60,54 @@ public:
      * Listen for commands from the external driver.
      */
     void listen(OpenMM::ContextImpl& context, std::string node);
+    /**
+     * Get the NonbondedForce.
+     */
+    const OpenMM::NonbondedForce* get_nonbonded_force(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <COORDS.
+     */
+    std::vector<OpenMM::Vec3> send_coords(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <VELOCITIES.
+     */
+    std::vector<OpenMM::Vec3> send_velocities(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <FORCES.
+     */
+    std::vector<OpenMM::Vec3> send_forces(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <TIME.
+     */
+    double send_time(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <NATOMS.
+     */
+    int send_natoms(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <CHARGES.
+     */
+    std::vector<double> send_charges(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <DIMENSIONS.
+     */
+    std::vector<int> send_dimensions(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <CELL.
+     */
+    std::vector<double> send_cell(OpenMM::ContextImpl& context);
+    /**
+     * Respond to >CELL.
+     */
+    void recv_cell(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <ENERGY.
+     */
+    double send_energy(OpenMM::ContextImpl& context);
+    /**
+     * Respond to <MASSES.
+     */
+    std::vector<double> send_masses(OpenMM::ContextImpl& context);
 };
 
 

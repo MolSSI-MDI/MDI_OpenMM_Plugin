@@ -37,7 +37,6 @@
 #include "mdi.h"
 //////////
 #include "openmm/internal/ContextImpl.h"
-#include "openmm/NonbondedForce.h"
 #include <mpi.h>
 //////////
 
@@ -50,36 +49,116 @@ MDIServer::MDIServer() {
 
 void MDIServer::init(string mdi_options) {
     printf("BBBBBBBBBBBBBBBBBBBBBBB\n");
+
+    // register commands
+    // this->register("<FORCES",["@GLOBAL","@UPDATE"]);
+
+    // register callbacks
+    // this->callbacks("@FORCES",["FORCES"]);
 }
 
 void MDIServer::listen(ContextImpl& context, string node) {
     printf("CCCCCCCCCCCCCCCCCCCCCCC\n");
     const OpenMM::System& system = context.getSystem();
 
+    /*
+    int (MDIServer::*myfunc)(ContextImpl&);
+    myfunc = &MDIServer::send_coords;
+    (this->*myfunc)(context);
+    */
+
     // <COORDS
+    this->send_coords(context);
+
+    // <VELOCITIES
+    this->send_velocities(context);
+
+    // <FORCES
+    this->send_forces(context);
+
+    // <TIME
+    this->send_time(context);
+
+    // <NATOMS
+    this->send_natoms(context);
+
+    // <CHARGES
+    this->send_charges(context);
+
+    // <DIMENSIONS
+    this->send_dimensions(context);
+
+    // <CELL
+    this->send_cell(context);
+
+    // >CELL
+    this->recv_cell(context);
+
+    // <ENERGY
+    //this->send_energy(context);
+
+    // <MASSES
+    this->send_masses(context);
+}
+
+
+
+vector<Vec3> MDIServer::send_coords(ContextImpl& context) {
     vector<Vec3> positions;
     context.getPositions(positions);
     printf("      pos: %f %f %f\n",positions[0][0],positions[0][1],positions[0][2]);
+    return positions;
+}
 
-    // <VELOCITIES
+vector<Vec3> MDIServer::send_velocities(ContextImpl& context) {
     vector<Vec3> velocities;
     context.getVelocities(velocities);
     printf("      vel: %f %f %f\n",velocities[0][0],velocities[0][1],velocities[0][2]);
+    return velocities;
+}
 
-    // <FORCES
+vector<Vec3> MDIServer::send_forces(ContextImpl& context) {
     vector<Vec3> forces;
     context.getForces(forces);
     printf("      for: %f %f %f\n",forces[0][0],forces[0][1],forces[0][2]);
+    return forces;
+}
 
-    // <TIME
+double MDIServer::send_time(ContextImpl& context) {
     double time = context.getTime();
     printf("      time: %f\n",time);
+    return time;
+}
 
-    // <NATOMS
-    int natom = system.getNumParticles();
-    printf("      natoms: %d\n",natom);
+int MDIServer::send_natoms(ContextImpl& context) {
+    const OpenMM::System& system = context.getSystem();
+    int natoms = system.getNumParticles();
+    printf("      natoms: %d\n",natoms);
+    return natoms;
+}
 
-    // <CHARGES
+vector<double> MDIServer::send_charges(ContextImpl& context) {
+    const OpenMM::System& system = context.getSystem();
+    int natoms = system.getNumParticles();
+
+    // identify the NonbondedForce, if any
+    const NonbondedForce* force = this->get_nonbonded_force(context);
+
+    double charge = 0.0;
+    double sigma = 0.0;
+    double epsilon = 0.0;
+    vector<double> charges;
+    for (int iatom=0; iatom<natoms; iatom++) {
+      force->getParticleParameters(iatom, charge, sigma, epsilon);
+      charges.push_back(charge);
+    }
+    printf("      charge: %f\n",charge);
+    return charges;
+}
+
+const NonbondedForce* MDIServer::get_nonbonded_force(ContextImpl& context) {
+    const OpenMM::System& system = context.getSystem();
+
     // identify the NonbondedForce, if any
     int nforce = system.getNumForces();
     printf("      nforces: %d\n",nforce);
@@ -96,36 +175,77 @@ void MDIServer::listen(ContextImpl& context, string node) {
     }
     const Force& nbnd_temp = system.getForce(nbnd_index);
     const NonbondedForce* nbnd_force = dynamic_cast<const NonbondedForce*>( &nbnd_temp );
-    double charge = 0.0;
-    double sigma = 0.0;
-    double epsilon = 0.0;
-    nbnd_force->getParticleParameters(0, charge, sigma, epsilon);
-    printf("      charge: %f\n",charge);
-    //nbnd_force->setParticleParameters(0, 0.2, sigma, epsilon);
+    return nbnd_force;
+}
 
-    // <DIMENSIONS
-    bool periodic = nbnd_force->usesPeriodicBoundaryConditions();
+vector<int> MDIServer::send_dimensions(ContextImpl& context) {
+    const OpenMM::System& system = context.getSystem();
+
+    // identify the NonbondedForce, if any
+    const NonbondedForce* force = this->get_nonbonded_force(context);
+
+    bool periodic = force->usesPeriodicBoundaryConditions();
     printf("      periodic: %d\n",periodic);
 
-    // <CELL
-    Vec3 cell1;
-    Vec3 cell2;
-    Vec3 cell3;
+    vector<int> dimensions;
+    for (int idim=0; idim < 3; idim++) {
+      if ( periodic ) {
+	dimensions.push_back(2);
+      }
+      else {
+	dimensions.push_back(1);
+      }
+    }
+
+    return dimensions;
+}
+
+vector<double> MDIServer::send_cell(ContextImpl& context) {
+    Vec3 cell1, cell2, cell3;
     context.getPeriodicBoxVectors(cell1, cell2, cell3);
+    vector <double> cell { 
+        cell1[0], cell1[1], cell1[2],
+        cell2[0], cell2[1], cell2[2],
+	cell3[0], cell3[1], cell3[2],
+	0.0, 0.0, 0.0
+    };
+    return cell;
+}
 
-    // >CELL
-    context.getOwner().setPeriodicBoxVectors(cell1, cell2, cell3);
+void MDIServer::recv_cell(ContextImpl& context) {
+    // get the cell vectors
+    // TEMPORARY
+    vector<double> cell = this->send_cell(context);
+    Vec3 cell1, cell2, cell3;
+    cell1[0] = cell[0];
+    cell1[1] = cell[1];
+    cell1[2] = cell[2];
+    cell2[0] = cell[3];
+    cell2[1] = cell[4];
+    cell2[2] = cell[5];
+    cell3[0] = cell[6];
+    cell3[1] = cell[7];
+    cell3[2] = cell[8];
 
-    // <ENERGY
+    context.setPeriodicBoxVectors(cell1, cell2, cell3);
+}
+
+double MDIServer::send_energy(ContextImpl& context) {
     // Compiles, but should be called outside the time step
-    //State state = context.getOwner().getState( State::Energy );
-    //double ke = state.getKineticEnergy();
-    //double pe = state.getPotentialEnergy();
+    State state = context.getOwner().getState( State::Energy );
+    double ke = state.getKineticEnergy();
+    double pe = state.getPotentialEnergy();
+    double energy = ke + pe;
+    return energy;
+}
 
-    // <MASSES
-    double mass;
-    mass = system.getParticleMass(0);
-    printf("      mass: %f\n",mass);
-
-
+vector<double> MDIServer::send_masses(ContextImpl& context) {
+    const OpenMM::System& system = context.getSystem();
+    int natoms = system.getNumParticles();
+    vector<double> masses;
+    for (int iatom=0; iatom < natoms; iatom++) {
+      masses.push_back( system.getParticleMass(iatom) );
+    }
+    printf("      mass: %f\n",masses[0]);
+    return masses;
 }
