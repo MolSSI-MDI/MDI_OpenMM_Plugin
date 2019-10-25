@@ -36,6 +36,7 @@
 #include "openmm/Context.h"
 #include "openmm/System.h"
 #include "openmm/Force.h"
+#include "openmm/Kernel.h"
 #include <vector>
 #include "internal/windowsExportExample.h"
 #include "openmm/NonbondedForce.h"
@@ -59,7 +60,7 @@ public:
     /**
      * Listen for commands from the external driver.
      */
-    void listen(OpenMM::ContextImpl& context, std::string node);
+    void listen(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::string node);
     /**
      * Get the NonbondedForce.
      */
@@ -109,6 +110,10 @@ public:
      */
     std::vector<double> send_masses(OpenMM::ContextImpl& context);
     /**
+     * Respond to >FORCES.
+     */
+    void recv_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
+    /**
      * Additional responses needed:
      * @
      * <@
@@ -130,6 +135,8 @@ public:
      * @PRE-FORCES
      * >VELOCITIES
      */
+    //private:
+    //OpenMM::Kernel *kernel;
 };
 
 

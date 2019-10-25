@@ -73,6 +73,15 @@ public:
      * @param force      the ExampleForce to copy the parameters from
      */
     virtual void copyParametersToContext(OpenMM::ContextImpl& context, const ExampleForce& force) = 0;
+    /**
+     * Set the action that should be performed by the kernel.
+     *
+     * @param new_action     the action to be performed
+     */
+    void setAction(int new_action) { this->action = new_action; };
+protected:
+    int action = 0; // 0 - do nothing; 1 - add forces; 2 - replace forces
+    std::vector<double> mdi_forces;
 };
 
 } // namespace ExamplePlugin

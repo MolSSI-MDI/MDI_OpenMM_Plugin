@@ -36,6 +36,7 @@
 #include "openmm/internal/AssertionUtilities.h"
 #include "mdi.h"
 //////////
+#include "ExampleKernels.h"
 #include "openmm/internal/ContextImpl.h"
 #include <mpi.h>
 //////////
@@ -48,8 +49,6 @@ MDIServer::MDIServer() {
 }
 
 void MDIServer::init(string mdi_options) {
-    printf("BBBBBBBBBBBBBBBBBBBBBBB\n");
-
     // register commands
     // this->register("<FORCES",["@GLOBAL","@UPDATE"]);
 
@@ -57,8 +56,7 @@ void MDIServer::init(string mdi_options) {
     // this->callbacks("@FORCES",["FORCES"]);
 }
 
-void MDIServer::listen(ContextImpl& context, string node) {
-    printf("CCCCCCCCCCCCCCCCCCCCCCC\n");
+void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
     const OpenMM::System& system = context.getSystem();
 
     /*
@@ -99,6 +97,9 @@ void MDIServer::listen(ContextImpl& context, string node) {
 
     // <MASSES
     this->send_masses(context);
+
+    // >FORCES
+    this->recv_forces(context, kernel);
 }
 
 
@@ -166,11 +167,8 @@ const NonbondedForce* MDIServer::get_nonbonded_force(ContextImpl& context) {
     for (int iforce=0; iforce < nforce; iforce++) {
       const Force& force = system.getForce(iforce);
       if ( dynamic_cast<const NonbondedForce*>( &force ) ){
-	printf("      %d TRUE\n",iforce);
+	//printf("      %d TRUE\n",iforce);
 	nbnd_index = iforce;
-      }
-      else {
-	printf("      %d FALSE\n",iforce);
       }
     }
     const Force& nbnd_temp = system.getForce(nbnd_index);
@@ -248,4 +246,11 @@ vector<double> MDIServer::send_masses(ContextImpl& context) {
     }
     printf("      mass: %f\n",masses[0]);
     return masses;
+}
+
+void MDIServer::recv_forces(ContextImpl& context, Kernel& kernel) {
+    // get the forces
+    // TEMPORARY
+
+    kernel.getAs<CalcExampleForceKernel>().setAction(2);
 }

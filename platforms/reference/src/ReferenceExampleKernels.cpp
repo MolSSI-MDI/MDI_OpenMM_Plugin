@@ -51,6 +51,10 @@ static vector<RealVec>& extractForces(ContextImpl& context) {
 }
 
 void ReferenceCalcExampleForceKernel::initialize(const System& system, const ExampleForce& force) {
+    this->mdi_forces.resize(system.getNumParticles());
+
+
+
     // Initialize bond parameters.
     
     int numBonds = force.getNumBonds();
@@ -84,6 +88,17 @@ double ReferenceCalcExampleForceKernel::execute(ContextImpl& context, bool inclu
         force[p1] -= delta*dEdR;
         force[p2] += delta*dEdR;
     }
+
+    // DO THE MDI FORCE CALCULATION
+    int natoms = context.getSystem().getNumParticles();
+    if ( this->action == 2 ) {
+      for (int iatom=0; iatom < natoms; iatom++) {
+	force[iatom][0] = 0.0;
+	force[iatom][1] = 0.0;
+	force[iatom][2] = 0.0;
+      }
+    }
+
     return energy;
 }
 
