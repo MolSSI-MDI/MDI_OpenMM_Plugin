@@ -77,7 +77,7 @@ private:
     OpenMM::OpenCLContext& cl;
     const OpenMM::System& system;
     OpenMM::OpenCLArray* params;
-    OpenMM::OpenCLArray* MDIForces;
+    OpenMM::OpenCLArray* mdiForces;
     cl::Kernel addForcesKernel;
     cl::Kernel setForcesKernel;
 };

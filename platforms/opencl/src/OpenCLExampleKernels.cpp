@@ -68,8 +68,8 @@ private:
 OpenCLCalcExampleForceKernel::~OpenCLCalcExampleForceKernel() {
     if (params != NULL)
         delete params;
-    if (MDIForces != NULL)
-        delete MDIForces;
+    if (mdiForces != NULL)
+        delete mdiForces;
 }
 
 void OpenCLCalcExampleForceKernel::initialize(const System& system, const ExampleForce& force) {
@@ -101,13 +101,22 @@ void OpenCLCalcExampleForceKernel::initialize(const System& system, const Exampl
     addForcesKernel = cl::Kernel(program, "addForces");
 
     // Upload MDIForces
-    MDIForces = OpenCLArray::create<cl_float>(cl, 3*system.getNumParticles(), "MDIForces");
-    vector<cl_float> MDIForcesVector(3*system.getNumParticles());
-    for (int i = 0; i < 3*system.getNumParticles(); i++) {
-      MDIForcesVector[i] = (cl_float) 0.0;
+    if (cl.getUseDoublePrecision()) {
+      mdiForces = OpenCLArray::create<cl_double>(cl, 3*system.getNumParticles(), "mdiForces");
+      vector<cl_double> mdiForcesVector(3*system.getNumParticles());
+      for (int i = 0; i < 3*system.getNumParticles(); i++) {
+        mdiForcesVector[i] = (cl_double) 0.0;
+      }
+      mdiForces->upload(mdiForcesVector);
     }
-    MDIForces->upload(MDIForcesVector);
-    replacements["MDIADD"] = cl.getBondedUtilities().addArgument(MDIForces->getDeviceBuffer(), "float");
+    else {
+      mdiForces = OpenCLArray::create<cl_float>(cl, 3*system.getNumParticles(), "mdiForces");
+      vector<cl_float> mdiForcesVector(3*system.getNumParticles());
+      for (int i = 0; i < 3*system.getNumParticles(); i++) {
+	mdiForcesVector[i] = (cl_float) 0.0;
+      }
+      mdiForces->upload(mdiForcesVector);
+    }
 
     // OBSOLETE: OLD EXAMPLE CODE
     if (numBonds > 0) {
@@ -149,7 +158,7 @@ double OpenCLCalcExampleForceKernel::execute(ContextImpl& context, bool includeF
     }
   */
 
-    addForcesKernel.setArg<cl::Buffer>(0, MDIForces->getDeviceBuffer());
+    addForcesKernel.setArg<cl::Buffer>(0, mdiForces->getDeviceBuffer());
     addForcesKernel.setArg<cl::Buffer>(1, cl.getForceBuffers().getDeviceBuffer());
     addForcesKernel.setArg<cl::Buffer>(2, cl.getAtomIndexArray().getDeviceBuffer());
     cl.executeKernel(addForcesKernel, cl.getNumAtoms());
