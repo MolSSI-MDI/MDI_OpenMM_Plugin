@@ -68,6 +68,8 @@ private:
 OpenCLCalcExampleForceKernel::~OpenCLCalcExampleForceKernel() {
     if (params != NULL)
         delete params;
+    if (MDIForces != NULL)
+        delete MDIForces;
 }
 
 void OpenCLCalcExampleForceKernel::initialize(const System& system, const ExampleForce& force) {
@@ -75,24 +77,83 @@ void OpenCLCalcExampleForceKernel::initialize(const System& system, const Exampl
     int startIndex = cl.getContextIndex()*force.getNumBonds()/numContexts;
     int endIndex = (cl.getContextIndex()+1)*force.getNumBonds()/numContexts;
     numBonds = endIndex-startIndex;
-    if (numBonds == 0)
-        return;
+    map<string, string> replacements;
+
+    // OBSOLETE: OLD EXAMPLE CODE
     vector<vector<int> > atoms(numBonds, vector<int>(2));
-    params = OpenCLArray::create<mm_float2>(cl, numBonds, "bondParams");
-    vector<mm_float2> paramVector(numBonds);
-    for (int i = 0; i < numBonds; i++) {
+    if (numBonds > 0) {
+      params = OpenCLArray::create<mm_float2>(cl, numBonds, "bondParams");
+      vector<mm_float2> paramVector(numBonds);
+      for (int i = 0; i < numBonds; i++) {
         double length, k;
         force.getBondParameters(startIndex+i, atoms[i][0], atoms[i][1], length, k);
         paramVector[i] = mm_float2((cl_float) length, (cl_float) k);
+      }
+      params->upload(paramVector);
+      replacements["PARAMS"] = cl.getBondedUtilities().addArgument(params->getDeviceBuffer(), "float2");
     }
-    params->upload(paramVector);
-    map<string, string> replacements;
-    replacements["PARAMS"] = cl.getBondedUtilities().addArgument(params->getDeviceBuffer(), "float2");
-    cl.getBondedUtilities().addInteraction(atoms, cl.replaceStrings(OpenCLExampleKernelSources::exampleForce, replacements), force.getForceGroup());
+
+    // Create addForces kernel
+    map<string, string> defines;
+    defines["NUM_ATOMS"] = cl.intToString(cl.getNumAtoms());
+    defines["PADDED_NUM_ATOMS"] = cl.intToString(cl.getPaddedNumAtoms());
+    cl::Program program = cl.createProgram(OpenCLExampleKernelSources::mdiForce, defines);
+    addForcesKernel = cl::Kernel(program, "addForces");
+
+    // Upload MDIForces
+    MDIForces = OpenCLArray::create<cl_float>(cl, 3*system.getNumParticles(), "MDIForces");
+    vector<cl_float> MDIForcesVector(3*system.getNumParticles());
+    for (int i = 0; i < 3*system.getNumParticles(); i++) {
+      MDIForcesVector[i] = (cl_float) 0.0;
+    }
+    MDIForces->upload(MDIForcesVector);
+    replacements["MDIADD"] = cl.getBondedUtilities().addArgument(MDIForces->getDeviceBuffer(), "float");
+
+    // OBSOLETE: OLD EXAMPLE CODE
+    if (numBonds > 0) {
+      cl.getBondedUtilities().addInteraction(atoms, cl.replaceStrings(OpenCLExampleKernelSources::exampleForce, replacements), force.getForceGroup());
+    }
     cl.addForce(new OpenCLExampleForceInfo(force));
 }
 
 double OpenCLCalcExampleForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+    // Upload the forces to the device.
+
+  /*
+    int numParticles = context.getSystem().getNumParticles();
+    if (cl.getUseDoublePrecision()) {
+      double* buffer = (double*) cl.getPinnedBuffer();
+      for (int i = 0; i < numParticles; ++i) {
+	//const Vec3& p = forces[i];
+	Vec3 p;
+	p[0] = 0.0;
+	p[1] = 0.0;
+	p[2] = 0.0;
+	buffer[3*i] = p[0];
+	buffer[3*i+1] = p[1];
+	buffer[3*i+2] = p[2];
+      }
+    }
+    else {
+      float* buffer = (float*) cl.getPinnedBuffer();
+      for (int i = 0; i < numParticles; ++i) {
+	//const Vec3& p = forces[i];
+	Vec3 p;
+	p[0] = 0.0;
+	p[1] = 0.0;
+	p[2] = 0.0;
+	buffer[3*i] = (float) p[0];
+	buffer[3*i+1] = (float) p[1];
+	buffer[3*i+2] = (float) p[2];
+      }
+    }
+  */
+
+    addForcesKernel.setArg<cl::Buffer>(0, MDIForces->getDeviceBuffer());
+    addForcesKernel.setArg<cl::Buffer>(1, cl.getForceBuffers().getDeviceBuffer());
+    addForcesKernel.setArg<cl::Buffer>(2, cl.getAtomIndexArray().getDeviceBuffer());
+    cl.executeKernel(addForcesKernel, cl.getNumAtoms());
+
     return 0.0;
 }
 

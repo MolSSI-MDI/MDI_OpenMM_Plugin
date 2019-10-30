@@ -7,6 +7,5 @@ energy += bondParams.y*deltaIdeal2*deltaIdeal2;
 real dEdR = 4*bondParams.y*deltaIdeal2*deltaIdeal;
 dEdR = (r > 0.0f) ? (dEdR/r) : 0.0f;
 delta.xyz *= dEdR;
-real4 force1 = delta;
-real4 force2 = -delta;
-
+real4 force1 = 0.0;
+real4 force2 = 0.0;

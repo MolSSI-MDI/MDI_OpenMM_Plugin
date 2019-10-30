@@ -10,6 +10,8 @@ class MDISimulation(mmapp.Simulation):
 
         ## Add the MDI force
         force = ExampleForce(server)
+        #for i in range(1000):
+        #    force.addBond(i, i, 1.0, 10.0)
         system.addForce(force)
 
         ## NOTE: AT THIS POINT, SHOULD SET A FLAG THAT PREVENTS THE FORCES FROM ACTUALLY LISTENING FOR COMMANDS

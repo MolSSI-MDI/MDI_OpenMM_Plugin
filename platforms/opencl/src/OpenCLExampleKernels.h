@@ -77,6 +77,9 @@ private:
     OpenMM::OpenCLContext& cl;
     const OpenMM::System& system;
     OpenMM::OpenCLArray* params;
+    OpenMM::OpenCLArray* MDIForces;
+    cl::Kernel addForcesKernel;
+    cl::Kernel setForcesKernel;
 };
 
 } // namespace ExamplePlugin
