@@ -99,7 +99,7 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
     this->send_masses(context);
 
     // >FORCES
-    this->recv_forces(context, kernel);
+    this->add_forces(context, kernel);
 }
 
 
@@ -248,9 +248,16 @@ vector<double> MDIServer::send_masses(ContextImpl& context) {
     return masses;
 }
 
-void MDIServer::recv_forces(ContextImpl& context, Kernel& kernel) {
-    // get the forces
-    // TEMPORARY
+void MDIServer::add_forces(ContextImpl& context, Kernel& kernel) {
+    // Tell the kernel to add a value to the forces
+    const OpenMM::System& system = context.getSystem();
+    int natoms = system.getNumParticles();
 
-    kernel.getAs<CalcExampleForceKernel>().setAction(2);
+    kernel.getAs<CalcExampleForceKernel>().setAction(1);
+    vector<double>* kernel_forces_ptr = kernel.getAs<CalcExampleForceKernel>().getForcesPtr();
+    vector<double> &kernel_forces = *kernel_forces_ptr;
+
+    for (int i = 0; i < 3*natoms; i++) {
+      kernel_forces[i] = 100.0;
+    }
 }

@@ -110,9 +110,9 @@ public:
      */
     std::vector<double> send_masses(OpenMM::ContextImpl& context);
     /**
-     * Respond to >FORCES.
+     * Respond to +FORCES.
      */
-    void recv_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
+    void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
     /**
      * Additional responses needed:
      * @

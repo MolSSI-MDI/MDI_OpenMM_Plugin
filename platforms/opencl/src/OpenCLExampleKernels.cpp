@@ -73,13 +73,15 @@ OpenCLCalcExampleForceKernel::~OpenCLCalcExampleForceKernel() {
 }
 
 void OpenCLCalcExampleForceKernel::initialize(const System& system, const ExampleForce& force) {
+    this->mdiReceivedForces.resize(3*system.getNumParticles());
+    action = 0;
+    map<string, string> replacements;
+
+    // OBSOLETE: OLD EXAMPLE CODE
     int numContexts = cl.getPlatformData().contexts.size();
     int startIndex = cl.getContextIndex()*force.getNumBonds()/numContexts;
     int endIndex = (cl.getContextIndex()+1)*force.getNumBonds()/numContexts;
     numBonds = endIndex-startIndex;
-    map<string, string> replacements;
-
-    // OBSOLETE: OLD EXAMPLE CODE
     vector<vector<int> > atoms(numBonds, vector<int>(2));
     if (numBonds > 0) {
       params = OpenCLArray::create<mm_float2>(cl, numBonds, "bondParams");
@@ -98,7 +100,7 @@ void OpenCLCalcExampleForceKernel::initialize(const System& system, const Exampl
     defines["NUM_ATOMS"] = cl.intToString(cl.getNumAtoms());
     defines["PADDED_NUM_ATOMS"] = cl.intToString(cl.getPaddedNumAtoms());
     cl::Program program = cl.createProgram(OpenCLExampleKernelSources::mdiForce, defines);
-    addForcesKernel = cl::Kernel(program, "addForces");
+    mdiAddForcesKernel = cl::Kernel(program, "mdiAddForces");
 
     // Upload MDIForces
     if (cl.getUseDoublePrecision()) {
@@ -158,10 +160,33 @@ double OpenCLCalcExampleForceKernel::execute(ContextImpl& context, bool includeF
     }
   */
 
-    addForcesKernel.setArg<cl::Buffer>(0, mdiForces->getDeviceBuffer());
-    addForcesKernel.setArg<cl::Buffer>(1, cl.getForceBuffers().getDeviceBuffer());
-    addForcesKernel.setArg<cl::Buffer>(2, cl.getAtomIndexArray().getDeviceBuffer());
-    cl.executeKernel(addForcesKernel, cl.getNumAtoms());
+    if (this->action == 1) {
+
+      // Upload MDIForces
+      if (cl.getUseDoublePrecision()) {
+	vector<cl_double> mdiForcesVector(3*system.getNumParticles());
+	for (int i = 0; i < 3*system.getNumParticles(); i++) {
+	  mdiForcesVector[i] = (cl_double) this->mdiReceivedForces[i];
+	}
+	mdiForces->upload(mdiForcesVector);
+      }
+      else {
+	vector<cl_float> mdiForcesVector(3*system.getNumParticles());
+	for (int i = 0; i < 3*system.getNumParticles(); i++) {
+	  mdiForcesVector[i] = (cl_float) this->mdiReceivedForces[i];
+	}
+	mdiForces->upload(mdiForcesVector);
+      }
+
+      mdiAddForcesKernel.setArg<cl::Buffer>(0, mdiForces->getDeviceBuffer());
+      mdiAddForcesKernel.setArg<cl::Buffer>(1, cl.getForceBuffers().getDeviceBuffer());
+      mdiAddForcesKernel.setArg<cl::Buffer>(2, cl.getAtomIndexArray().getDeviceBuffer());
+      cl.executeKernel(mdiAddForcesKernel, cl.getNumAtoms());
+
+    }
+
+    // Unset the action flag
+    this->setAction(0);
 
     return 0.0;
 }

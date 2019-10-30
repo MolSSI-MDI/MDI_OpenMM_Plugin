@@ -79,9 +79,14 @@ public:
      * @param new_action     the action to be performed
      */
     void setAction(int new_action) { this->action = new_action; };
+    /**
+     * Return a pointer to the forces that will be used by this kernel when it executes
+     *
+     */
+    std::vector<double>* getForcesPtr() { return &this->mdiReceivedForces; };
 protected:
     int action = 0; // 0 - do nothing; 1 - add forces; 2 - replace forces
-    std::vector<double> mdi_forces;
+    std::vector<double> mdiReceivedForces;
 };
 
 } // namespace ExamplePlugin

@@ -51,7 +51,8 @@ static vector<RealVec>& extractForces(ContextImpl& context) {
 }
 
 void ReferenceCalcExampleForceKernel::initialize(const System& system, const ExampleForce& force) {
-    this->mdi_forces.resize(system.getNumParticles());
+    this->mdiReceivedForces.resize(3*system.getNumParticles());
+    action = 0;
 
 
 
