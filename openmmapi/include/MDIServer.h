@@ -41,6 +41,7 @@
 #include "internal/windowsExportExample.h"
 #include "openmm/NonbondedForce.h"
 #include "MDI_Library/mdi.h"
+#include <cstddef>
 
 namespace ExamplePlugin {
 
@@ -101,7 +102,7 @@ public:
     /**
      * Respond to >CELL.
      */
-    void recv_cell(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    void recv_cell(OpenMM::ContextImpl& context, MDI_Comm mdi_comm, std::vector<double>* cell_in = nullptr);
     /**
      * Respond to <ENERGY.
      */
@@ -113,7 +114,7 @@ public:
     /**
      * Respond to +FORCES.
      */
-    void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, MDI_Comm mdi_comm);
+    void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, MDI_Comm mdi_comm, std::vector<double>* forces_in = nullptr);
     /**
      * Additional responses needed:
      * @

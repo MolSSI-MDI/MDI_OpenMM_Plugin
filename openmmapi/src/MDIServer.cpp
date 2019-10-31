@@ -83,7 +83,7 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node, MDI_Co
     this->send_time(context, mdi_comm);
 
     // <NATOMS
-    this->send_natoms(context, mdi_comm);
+    double natoms = this->send_natoms(context, mdi_comm);
 
     // <CHARGES
     this->send_charges(context, mdi_comm);
@@ -95,7 +95,8 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node, MDI_Co
     this->send_cell(context, mdi_comm);
 
     // >CELL
-    this->recv_cell(context, mdi_comm);
+    vector<double> cell = this->send_cell(context, mdi_comm);
+    this->recv_cell(context, mdi_comm, &cell);
 
     // <ENERGY
     //this->send_energy(context, mdi_comm);
@@ -104,7 +105,12 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node, MDI_Co
     this->send_masses(context, mdi_comm);
 
     // >FORCES
-    this->add_forces(context, kernel, mdi_comm);
+    double conv = MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol");
+    vector<double> forces;
+    for (int i = 0; i < 3*natoms; i++) {
+      forces.push_back( 100.0 / conv );
+    }
+    this->add_forces(context, kernel, mdi_comm, &forces);
 }
 
 
@@ -114,13 +120,13 @@ vector<Vec3> MDIServer::send_coords(ContextImpl& context, MDI_Comm mdi_comm) {
     int natoms = system.getNumParticles();
     vector<Vec3> positions;
     context.getPositions(positions);
-    printf("      pos: %f %f %f\n",positions[0][0],positions[0][1],positions[0][2]);
-    double conv = MDI_Conversion_Factor("meter","bohr") * 1.0e-9;
+    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
     for (int iatom = 0; iatom < natoms; iatom++) {
       positions[iatom][0] *= conv;
       positions[iatom][1] *= conv;
       positions[iatom][2] *= conv;
     }
+    printf("      pos: %f %f %f\n",positions[0][0],positions[0][1],positions[0][2]);
     MDI_Send(&positions, 3*natoms, MDI_DOUBLE, mdi_comm);
     return positions;
 }
@@ -130,6 +136,13 @@ vector<Vec3> MDIServer::send_velocities(ContextImpl& context, MDI_Comm mdi_comm)
     int natoms = system.getNumParticles();
     vector<Vec3> velocities;
     context.getVelocities(velocities);
+    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
+    conv /= MDI_Conversion_Factor("picosecond","atomic_unit_of_time");
+    for (int iatom = 0; iatom < natoms; iatom++) {
+      velocities[iatom][0] *= conv;
+      velocities[iatom][1] *= conv;
+      velocities[iatom][2] *= conv;
+    }
     printf("      vel: %f %f %f\n",velocities[0][0],velocities[0][1],velocities[0][2]);
     MDI_Send(&velocities, 3*natoms, MDI_DOUBLE, mdi_comm);
     return velocities;
@@ -140,6 +153,13 @@ vector<Vec3> MDIServer::send_forces(ContextImpl& context, MDI_Comm mdi_comm) {
     int natoms = system.getNumParticles();
     vector<Vec3> forces;
     context.getForces(forces);
+    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
+    conv *= MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
+    for (int iatom = 0; iatom < natoms; iatom++) {
+      forces[iatom][0] *= conv;
+      forces[iatom][1] *= conv;
+      forces[iatom][2] *= conv;
+    }
     printf("      for: %f %f %f\n",forces[0][0],forces[0][1],forces[0][2]);
     MDI_Send(&forces, 3*natoms, MDI_DOUBLE, mdi_comm);
     return forces;
@@ -147,6 +167,8 @@ vector<Vec3> MDIServer::send_forces(ContextImpl& context, MDI_Comm mdi_comm) {
 
 double MDIServer::send_time(ContextImpl& context, MDI_Comm mdi_comm) {
     double time = context.getTime();
+    double conv = MDI_Conversion_Factor("picosecond","atomic_unit_of_time");
+    time *= conv;
     printf("      time: %f\n",time);
     MDI_Send(&time, 1, MDI_DOUBLE, mdi_comm);
     return time;
@@ -226,11 +248,12 @@ vector<int> MDIServer::send_dimensions(ContextImpl& context, MDI_Comm mdi_comm) 
 
 vector<double> MDIServer::send_cell(ContextImpl& context, MDI_Comm mdi_comm) {
     Vec3 cell1, cell2, cell3;
+    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
     context.getPeriodicBoxVectors(cell1, cell2, cell3);
     vector <double> cell { 
-        cell1[0], cell1[1], cell1[2],
-        cell2[0], cell2[1], cell2[2],
-	cell3[0], cell3[1], cell3[2],
+        cell1[0] * conv, cell1[1] * conv, cell1[2] * conv,
+        cell2[0] * conv, cell2[1] * conv, cell2[2] * conv,
+	cell3[0] * conv, cell3[1] * conv, cell3[2] * conv,
 	0.0, 0.0, 0.0
     };
     MDI_Send(&cell, 12, MDI_DOUBLE, mdi_comm);
@@ -243,6 +266,8 @@ double MDIServer::send_energy(ContextImpl& context, MDI_Comm mdi_comm) {
     double ke = state.getKineticEnergy();
     double pe = state.getPotentialEnergy();
     double energy = ke + pe;
+    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
+    energy *= conv;
     MDI_Send(&energy, 1, MDI_DOUBLE, mdi_comm);
     return energy;
 }
@@ -259,36 +284,55 @@ vector<double> MDIServer::send_masses(ContextImpl& context, MDI_Comm mdi_comm) {
     return masses;
 }
 
-void MDIServer::recv_cell(ContextImpl& context, MDI_Comm mdi_comm) {
+void MDIServer::recv_cell(ContextImpl& context, MDI_Comm mdi_comm, vector<double>* cell_in) {
     // get the cell vectors
-    // TEMPORARY
-    // NEED TO GET THE CELL VECTORS FROM MDI
-    vector<double> cell = this->send_cell(context, mdi_comm);
+    vector<double> cell;
+    cell.resize(12);
+    if ( cell_in == nullptr ) {
+      MDI_Recv(&cell, 12, MDI_DOUBLE, mdi_comm);
+    }
+    else {
+      for (int i = 0; i < cell.size(); i++ ) {
+	cell[i] = (*cell_in)[i];
+      }
+    }
+    double conv = MDI_Conversion_Factor("atomic_unit_of_length","nanometer");
     Vec3 cell1, cell2, cell3;
-    cell1[0] = cell[0];
-    cell1[1] = cell[1];
-    cell1[2] = cell[2];
-    cell2[0] = cell[3];
-    cell2[1] = cell[4];
-    cell2[2] = cell[5];
-    cell3[0] = cell[6];
-    cell3[1] = cell[7];
-    cell3[2] = cell[8];
+    cell1[0] = cell[0] * conv;
+    cell1[1] = cell[1] * conv;
+    cell1[2] = cell[2] * conv;
+    cell2[0] = cell[3] * conv;
+    cell2[1] = cell[4] * conv;
+    cell2[2] = cell[5] * conv;
+    cell3[0] = cell[6] * conv;
+    cell3[1] = cell[7] * conv;
+    cell3[2] = cell[8] * conv;
 
     context.setPeriodicBoxVectors(cell1, cell2, cell3);
 }
 
-void MDIServer::add_forces(ContextImpl& context, Kernel& kernel, MDI_Comm mdi_comm) {
-    // Tell the kernel to add a value to the forces
+void MDIServer::add_forces(ContextImpl& context, Kernel& kernel, MDI_Comm mdi_comm, vector<double>* forces_in) {
     const OpenMM::System& system = context.getSystem();
     int natoms = system.getNumParticles();
 
+    // Tell the kernel to add a value to the forces
     kernel.getAs<CalcExampleForceKernel>().setAction(1);
     vector<double>* kernel_forces_ptr = kernel.getAs<CalcExampleForceKernel>().getForcesPtr();
     vector<double> &kernel_forces = *kernel_forces_ptr;
 
-    // NEED TO GET THE FORCES FROM MDI
+    vector<double> forces;
+    forces.resize(3*natoms);
+    if ( forces_in == nullptr ) {
+      MDI_Recv(&kernel_forces, 3*natoms, MDI_DOUBLE, mdi_comm);
+    }
+    else {
+      for (int i = 0; i < 3*natoms; i++) {
+	kernel_forces[i] = (*forces_in)[i];
+      }
+    }
+
+    double conv = MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol");
     for (int i = 0; i < 3*natoms; i++) {
-      kernel_forces[i] = 100.0;
+      kernel_forces[i] *= conv;
     }
 }
