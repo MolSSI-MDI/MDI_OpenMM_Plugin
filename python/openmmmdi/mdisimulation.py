@@ -7,6 +7,7 @@ class MDISimulation(mmapp.Simulation):
     def __init__(self, mdiOptions, topology, system, integrator, platform=None, platformProperties=None, state=None):
         ## Create an MDI server object
         server = MDIServer()
+        server.init(mdiOptions)
 
         ## Add the MDI force
         force = ExampleForce(server)

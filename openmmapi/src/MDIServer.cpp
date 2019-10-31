@@ -49,6 +49,12 @@ MDIServer::MDIServer() {
 }
 
 void MDIServer::init(string mdi_options) {
+    // Initialize MPI
+
+    // Initialize MDI
+    const char *options = mdi_options.c_str();
+    MDI_Init(options, NULL);
+
     // register commands
     // this->register("<FORCES",["@GLOBAL","@UPDATE"]);
 
