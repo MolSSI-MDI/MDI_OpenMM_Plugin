@@ -50,7 +50,7 @@ public:
 
 class ExampleForce : public OpenMM::Force {
 public:
-    ExampleForce(MDIServer& server);
+    ExampleForce(std::string, MDIServer& server);
 
     int getNumBonds() const;
 

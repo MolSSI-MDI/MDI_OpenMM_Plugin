@@ -37,6 +37,7 @@
 #include <vector>
 #include "internal/windowsExportExample.h"
 #include "MDIServer.h"
+#include "MDI_Library/mdi.h"
 
 namespace ExamplePlugin {
 
@@ -50,7 +51,7 @@ public:
     /**
      * Create an ExampleForce.
      */
-    ExampleForce(MDIServer& server);
+    ExampleForce(std::string mdi_options, MDIServer& server);
     /**
      * Get the number of bond stretch terms in the potential function
      */
@@ -111,11 +112,18 @@ public:
     MDIServer& getServer() const {
       return this->server;
     }
+    /**
+     * Returns the MDI_Comm
+     */
+    MDI_Comm getMDIComm() const {
+      return this->mdi_comm;
+    }
 protected:
     OpenMM::ForceImpl* createImpl() const;
 private:
     class BondInfo;
     std::vector<BondInfo> bonds;
+    MDI_Comm mdi_comm;
     MDIServer& server;
 };
 

@@ -287,6 +287,7 @@ int general_accept_communicator() {
   // if MDI hasn't returned some connections, do that now
   if ( returned_comms < communicators.size ) {
     returned_comms++;
+    printf("Returning %d\n",returned_comms);
     return returned_comms;
   }
 
@@ -330,7 +331,12 @@ int general_send(const void* buf, int count, MDI_Datatype datatype, MDI_Comm com
 
   //communicator_send(buf, count, datatype, comm);
 
+  printf("GENERAL_SEND\n");
+  printf("Comm: %d %d\n",comm-1,communicators.size);
+
   communicator* this = vector_get(&communicators, comm-1);
+
+  printf("AFTER GET\n");
 
   if ( this->method == MDI_MPI ) {
     mpi_send(buf, count, datatype, comm);

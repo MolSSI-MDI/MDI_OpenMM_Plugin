@@ -40,6 +40,7 @@
 #include <vector>
 #include "internal/windowsExportExample.h"
 #include "openmm/NonbondedForce.h"
+#include "MDI_Library/mdi.h"
 
 namespace ExamplePlugin {
 
@@ -60,7 +61,7 @@ public:
     /**
      * Listen for commands from the external driver.
      */
-    void listen(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::string node);
+    void listen(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::string node, MDI_Comm mdi_comm);
     /**
      * Get the NonbondedForce.
      */
@@ -68,51 +69,51 @@ public:
     /**
      * Respond to <COORDS.
      */
-    std::vector<OpenMM::Vec3> send_coords(OpenMM::ContextImpl& context);
+    std::vector<OpenMM::Vec3> send_coords(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <VELOCITIES.
      */
-    std::vector<OpenMM::Vec3> send_velocities(OpenMM::ContextImpl& context);
+    std::vector<OpenMM::Vec3> send_velocities(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <FORCES.
      */
-    std::vector<OpenMM::Vec3> send_forces(OpenMM::ContextImpl& context);
+    std::vector<OpenMM::Vec3> send_forces(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <TIME.
      */
-    double send_time(OpenMM::ContextImpl& context);
+    double send_time(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <NATOMS.
      */
-    int send_natoms(OpenMM::ContextImpl& context);
+    int send_natoms(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <CHARGES.
      */
-    std::vector<double> send_charges(OpenMM::ContextImpl& context);
+    std::vector<double> send_charges(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <DIMENSIONS.
      */
-    std::vector<int> send_dimensions(OpenMM::ContextImpl& context);
+    std::vector<int> send_dimensions(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <CELL.
      */
-    std::vector<double> send_cell(OpenMM::ContextImpl& context);
+    std::vector<double> send_cell(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to >CELL.
      */
-    void recv_cell(OpenMM::ContextImpl& context);
+    void recv_cell(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <ENERGY.
      */
-    double send_energy(OpenMM::ContextImpl& context);
+    double send_energy(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to <MASSES.
      */
-    std::vector<double> send_masses(OpenMM::ContextImpl& context);
+    std::vector<double> send_masses(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
      * Respond to +FORCES.
      */
-    void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
+    void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, MDI_Comm mdi_comm);
     /**
      * Additional responses needed:
      * @
@@ -134,9 +135,10 @@ public:
      * <NCOMMANDS
      * @PRE-FORCES
      * >VELOCITIES
+     * <CALLBACKS
      */
     //private:
-    //OpenMM::Kernel *kernel;
+    //MDI_Comm mdi_comm;
 };
 
 
