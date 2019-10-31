@@ -46,7 +46,6 @@ ExampleForce::ExampleForce(string mdi_options, MDIServer& server) : server(serve
 
     // Accept the MDI communicator
     this->mdi_comm = MDI_Accept_Communicator();
-    printf("AAAAAAA: %d\n",this->mdi_comm);
 }
 
 int ExampleForce::addBond(int particle1, int particle2, double length, double k) {
