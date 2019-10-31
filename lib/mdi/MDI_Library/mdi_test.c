@@ -15,7 +15,6 @@
  *
  */
 int test_initialize() {
-  printf("TEST_INITIALIZE\n");
   communicator new_comm;
   new_comm.method = MDI_TEST;
   vector_push_back( &communicators, &new_comm );
@@ -35,7 +34,6 @@ int test_initialize() {
  *                   MDI communicator associated with the intended recipient code.
  */
 int test_send(const void* buf, int count, MDI_Datatype datatype, MDI_Comm comm) {
-  printf("TEST_SENDING\n");
 
   if ( datatype != MDI_INT && datatype != MDI_DOUBLE && datatype != MDI_CHAR ) {
     mdi_error("MDI data type not recognized in test_send");
