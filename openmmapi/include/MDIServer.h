@@ -72,9 +72,17 @@ public:
      */
     std::vector<OpenMM::Vec3> send_coords(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
+     * Respond to >COORDS.
+     */
+    void recv_coords(OpenMM::ContextImpl& context, MDI_Comm mdi_comm, std::vector<OpenMM::Vec3>* coords_in = nullptr);
+    /**
      * Respond to <VELOCITIES.
      */
     std::vector<OpenMM::Vec3> send_velocities(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    /**
+     * Respond to >VELOCITIES.
+     */
+    void recv_velocities(OpenMM::ContextImpl& context, MDI_Comm mdi_comm, std::vector<OpenMM::Vec3>* velocities_in = nullptr);
     /**
      * Respond to <FORCES.
      */
@@ -108,6 +116,22 @@ public:
      */
     double send_energy(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
     /**
+     * Respond to <KE.
+     */
+    double send_ke(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    /**
+     * Respond to <KE_NUC.
+     */
+    double send_ke_nuc(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    /**
+     * Respond to <PE.
+     */
+    double send_pe(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    /**
+     * Respond to <PE_NUC.
+     */
+    double send_pe_nuc(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
+    /**
      * Respond to <MASSES.
      */
     std::vector<double> send_masses(OpenMM::ContextImpl& context, MDI_Comm mdi_comm);
@@ -119,23 +143,15 @@ public:
      * Additional responses needed:
      * @
      * <@
-     * <COMMANDS
      * @COORDS
-     * >COORDS
-     * <KE
-     * <PE
-     * <KE_NUC
-     * <PE_NUC
-     * EXIT
      * @FORCES
-     * +FORCES
-     * >FORCES
-     * <GLOBAL
      * @INIT_MD
      * @INIT_OPTG
-     * <NCOMMANDS
+     * @GLOBAL
      * @PRE-FORCES
-     * >VELOCITIES
+     * EXIT
+     * <NCOMMANDS
+     * <COMMANDS
      * <CALLBACKS
      */
     //private:
