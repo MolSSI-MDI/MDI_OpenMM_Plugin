@@ -66,6 +66,10 @@ void MDIServer::init(string mdi_options) {
     // this->callbacks("@FORCES",["FORCES"]);
 }
 
+void MDIServer::run() {
+  return;
+}
+
 void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node, MDI_Comm mdi_comm) {
     const OpenMM::System& system = context.getSystem();
 

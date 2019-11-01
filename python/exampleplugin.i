@@ -46,6 +46,7 @@ class MDIServer {
 public:
     MDIServer();
     void init(std::string mdi_options);
+    void run();
 };
 
 class ExampleForce : public OpenMM::Force {

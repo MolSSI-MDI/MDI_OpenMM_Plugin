@@ -60,6 +60,10 @@ public:
      */
     void init(std::string mdi_options);
     /**
+     * Run the MDIServer.
+     */
+    void run();
+    /**
      * Listen for commands from the external driver.
      */
     void listen(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::string node, MDI_Comm mdi_comm);

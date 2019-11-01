@@ -6,11 +6,11 @@ from .openmmmdi import ExampleForce, MDIServer
 class MDISimulation(mmapp.Simulation):
     def __init__(self, mdiOptions, topology, system, integrator, platform=None, platformProperties=None, state=None):
         ## Create an MDI server object
-        server = MDIServer()
-        #server.init(mdiOptions)
+        self.server = MDIServer()
+        self.server.init(mdiOptions)
 
         ## Add the MDI force
-        force = ExampleForce(mdiOptions, server)
+        force = ExampleForce(mdiOptions, self.server)
         #for i in range(1000):
         #    force.addBond(i, i, 1.0, 10.0)
         system.addForce(force)
@@ -22,5 +22,6 @@ class MDISimulation(mmapp.Simulation):
                                   platform=platform, platformProperties=platformProperties, state=state)
 
     def runMDI(self):
+        self.server.run()
         for istep in range(10):
             self.step(1)
