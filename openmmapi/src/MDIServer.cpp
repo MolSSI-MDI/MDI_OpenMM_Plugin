@@ -45,6 +45,9 @@ using namespace OpenMM;
 using namespace std;
 
 MDIServer::MDIServer() {
+    MDINode* new_node = new MDINode("@GLOBAL");
+    this->nodes.push_back(new_node);
+    printf("Number of nodes: %d\n",this->nodes.size());
 }
 
 void MDIServer::init(string mdi_options) {
@@ -72,6 +75,7 @@ void MDIServer::run() {
 
 void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node, MDI_Comm mdi_comm) {
     const OpenMM::System& system = context.getSystem();
+    printf("Number of nodes: %d\n",this->nodes.size());
 
     // <COORDS
     vector<Vec3> positions = this->send_coords(context, mdi_comm);

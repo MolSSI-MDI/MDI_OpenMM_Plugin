@@ -42,6 +42,7 @@
 #include "openmm/NonbondedForce.h"
 #include "MDI_Library/mdi.h"
 #include <cstddef>
+#include "MDINode.h"
 
 namespace ExamplePlugin {
 
@@ -158,8 +159,8 @@ public:
      * <COMMANDS
      * <CALLBACKS
      */
-    //private:
-    //MDI_Comm mdi_comm;
+private:
+    std::vector<MDINode*> nodes;
 };
 
 
