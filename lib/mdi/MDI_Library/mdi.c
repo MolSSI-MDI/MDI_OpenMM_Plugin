@@ -641,3 +641,171 @@ void MDI_Set_World_Rank(int world_rank_in)
 {
   set_world_rank(world_rank_in);
 }
+
+
+int MDI_Register_Node(const char* node_name)
+{
+  // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
+  if ( strlen(node_name) > COMMAND_LENGTH ) {
+    mdi_error("Cannot register name with length greater than MDI_COMMAND_LENGTH");
+  }
+
+  // confirm that this node is not already registered
+  int inode;
+  int node_index = -1;
+  for ( inode = 0; inode < nodes.size; inode++ ) {
+    node* this_node = vector_get(&nodes, inode);
+    if ( strcmp( node_name, this_node->name ) == 0 ) {
+      node_index = inode;
+    }
+  }
+  if ( node_index != -1 ) {
+    mdi_error("This node is already registered");
+  }
+
+  node new_node;
+  vector* command_vec = malloc(sizeof(vector));
+  vector* callback_vec = malloc(sizeof(vector));
+  vector_init(command_vec, sizeof(char[COMMAND_LENGTH]));
+  vector_init(callback_vec, sizeof(char[COMMAND_LENGTH]));
+  new_node.commands = command_vec;
+  new_node.callbacks = callback_vec;
+  strcpy(new_node.name, node_name);
+  vector_push_back(&nodes, &new_node);
+  return 0;
+}
+
+/*
+bool MDI_Check_Node(const char* node_name)
+{
+  // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
+  if ( strlen(node_name) > COMMAND_LENGTH ) {
+    mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
+  }
+
+  // find the node
+  int inode;
+  int node_index = -1;
+  for ( inode = 0; inode < nodes.size; inode++ ) {
+    node* this_node = vector_get(&nodes, inode);
+    if ( strcmp( node_name, this_node->name ) == 0 ) {
+      node_index = inode;
+    }
+  }
+  if ( node_index == -1 ) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+*/
+
+int MDI_Get_NNodes(MDI_Comm comm, int* nnodes)
+{
+  *nnodes = nodes.size;
+  return 0;
+}
+
+int MDI_Get_Node(int index, MDI_Comm comm, char* name)
+{
+  node* ret_node = vector_get(&nodes, index);
+  strcpy(name, &ret_node->name[0]);
+  return 0;
+}
+
+int MDI_Register_Command(const char* node_name, const char* command_name)
+{
+  // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
+  if ( strlen(node_name) > COMMAND_LENGTH ) {
+    mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
+  }
+
+  // confirm that the command_name size is not greater than MDI_COMMAND_LENGTH
+  if ( strlen(command_name) > COMMAND_LENGTH ) {
+    mdi_error("Cannot register name with length greater than MDI_COMMAND_LENGTH");
+  }
+
+  // find the node
+  int inode;
+  int node_index = -1;
+  for ( inode = 0; inode < nodes.size; inode++ ) {
+    node* this_node = vector_get(&nodes, inode);
+    if ( strcmp( node_name, this_node->name ) == 0 ) {
+      node_index = inode;
+    }
+  }
+  if ( node_index == -1 ) {
+    mdi_error("Attempting to register a command on an unregistered node");
+  }
+  node* target_node = vector_get(&nodes, node_index);
+
+  // confirm that this command is not already registered
+  int icommand;
+  int command_index = -1;
+  for ( icommand = 0; icommand < target_node->commands->size; icommand++ ) {
+    if ( strcmp( command_name, vector_get( target_node->commands, icommand ) ) == 0 ) {
+      command_index = inode;
+    }
+  }
+  if ( command_index != -1 ) {
+    mdi_error("This command is already registered for this node");
+  }
+
+  // register this command
+  char new_command[COMMAND_LENGTH];
+  strcpy(new_command, command_name);
+  vector_push_back( target_node->commands, &new_command );
+
+  return 0;
+}
+
+int MDI_Get_NCommands(MDI_Comm comm, const char* node_name, int* nnodes)
+{
+  // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
+  if ( strlen(node_name) > COMMAND_LENGTH ) {
+    mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
+  }
+
+  // find the node
+  int inode;
+  int node_index = -1;
+  for ( inode = 0; inode < nodes.size; inode++ ) {
+    node* this_node = vector_get(&nodes, inode);
+    if ( strcmp( node_name, this_node->name ) == 0 ) {
+      node_index = inode;
+    }
+  }
+  if ( node_index == -1 ) {
+    mdi_error("Attempting to register a command on an unregistered node");
+  }
+  node* target_node = vector_get(&nodes, node_index);
+
+  *nnodes = target_node->commands->size;
+  return 0;
+}
+
+int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name)
+{
+  // find the node
+  int inode;
+  int node_index = -1;
+  for ( inode = 0; inode < nodes.size; inode++ ) {
+    node* this_node = vector_get(&nodes, inode);
+    if ( strcmp( node_name, this_node->name ) == 0 ) {
+      node_index = inode;
+    }
+  }
+  if ( node_index == -1 ) {
+    mdi_error("MDI_Get_Command could not find the requested node");
+  }
+  node* target_node = vector_get(&nodes, node_index);
+
+  if ( target_node->commands->size <= index ) {
+    mdi_error("MDI_Get_Command failed because the command does not exist");
+  }
+
+  char* target_command = vector_get( target_node->commands, index );
+  strcpy(name, target_command);
+  return 0;
+}

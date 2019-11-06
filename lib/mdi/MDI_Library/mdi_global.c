@@ -14,6 +14,9 @@ int ipi_compatibility = 0;
 /*! \brief Vector containing all MDI communicators */
 vector communicators;
 
+/*! \brief Vector containing all nodes supported by this code */
+vector nodes;
+
 /*! \brief Initialize memory allocation for a vector structure
  *
  * \param [in]       v
