@@ -37,25 +37,6 @@ int general_init(const char* options, void* world_comm) {
   vector_init(&communicators, sizeof(communicator));
   vector_init(&nodes, sizeof(node));
 
-  /////////////////////
-  /*
-  printf("--------------------------------------------------------------------------\n");
-  MDI_Register_Node("@FORCES");
-  char node_name[COMMAND_LENGTH];
-  MDI_Get_Node(0, MDI_NULL_COMM, node_name);
-  MDI_Register_Command("@FORCES",">FORCES");
-  MDI_Register_Command("@FORCES","+FORCES");
-  printf("Node Name: %s\n",node_name);
-  MDI_Get_Command("@FORCES", 0, MDI_NULL_COMM, node_name);
-  printf("Command Name: %s\n",node_name);
-  MDI_Register_Node("@FORCES2");
-  int nnodes;
-  MDI_Get_NNodes(MDI_NULL_COMM, &nnodes);
-  printf("Number of nodes: %d\n",nnodes);
-  printf("--------------------------------------------------------------------------\n");
-  */
-  /////////////////////
-
   char* strtol_ptr;
   int i;
 

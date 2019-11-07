@@ -132,12 +132,13 @@ int MDI_Init(const char* options, void* world_comm)
  * If no new communicators are available, the function returns \p MDI_NULL_COMM.
  *
  */
-MDI_Comm MDI_Accept_Communicator()
+MDI_Comm MDI_Accept_Communicator(MDI_Comm* comm)
 {
   if ( is_initialized == 0 ) {
     mdi_error("MDI_Accept_Communicator called but MDI has not been initialized");
   }
-  return general_accept_communicator();
+  *comm = general_accept_communicator();
+  return 0;
 }
 
 
@@ -225,11 +226,12 @@ int MDI_Recv_Command(char* buf, MDI_Comm comm)
 }
 
 
-/*! \brief Return a conversion factor between two units
+/*! \brief Determine the conversion factor between two units
  *
- * The function returns the conversion factor from \p in_unit to \p out_unit.
+ * The function determines the conversion factor from \p in_unit to \p out_unit.
  * The function requires that \p in_unit and \p out_unit be members of the same category of unit (\em i.e. charge, energy, force, etc.).
  * For example, calling \p MDI_Conversion_Factor(\p "kilojoule_per_mol",\p "atomic_unit_of_energy") will return the conversion factor from kilojoule/mol to hartrees.
+ * The function returns \p 0 on a success.
  *
  * All quantities communicated through MDI must be represented using atomic units.
  * When unit conversions are necessary, this function should be used to obtain the conversion factors, as this will ensure that all drivers and engines use conversion factors that are self-consistent across codes.
@@ -280,8 +282,10 @@ int MDI_Recv_Command(char* buf, MDI_Comm comm)
  *                   Name of the unit to convert from.
  * \param [in]       out_unit
  *                   Name of the unit to convert to.
+ * \param [out]      conv
+ *                   Conversion factor from in_unit to out_unit
  */
-double MDI_Conversion_Factor(const char* in_unit, const char* out_unit)
+int MDI_Conversion_Factor(const char* in_unit, const char* out_unit, double* conv)
 {
   // Except where otherwise noted, all values are from:
   //   - https://physics.nist.gov/cuu/Constants/Table/allascii.txt
@@ -592,7 +596,8 @@ double MDI_Conversion_Factor(const char* in_unit, const char* out_unit)
     mdi_error("The units are of two different types, and conversion is not possible.");
   }
 
-  return in_conv / out_conv;
+  *conv = in_conv / out_conv;
+  return 0;
 }
 
 

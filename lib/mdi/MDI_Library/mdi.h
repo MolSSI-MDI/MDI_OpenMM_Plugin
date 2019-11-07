@@ -85,12 +85,12 @@ DllExport extern const double MDI_RYDBERG_TO_HARTREE;
 DllExport extern const double MDI_KELVIN_TO_HARTREE;
 
 DllExport int MDI_Init(const char* options, void* world_comm);
-DllExport int MDI_Accept_Communicator();
+DllExport int MDI_Accept_Communicator(MDI_Comm* comm);
 DllExport int MDI_Send(const void* buf, int count, MDI_Datatype datatype, MDI_Comm comm);
 DllExport int MDI_Recv(void* buf, int count, MDI_Datatype datatype, MDI_Comm comm);
 DllExport int MDI_Send_Command(const char* buf, MDI_Comm comm);
 DllExport int MDI_Recv_Command(char* buf, MDI_Comm comm);
-DllExport double MDI_Conversion_Factor(const char* in_unit, const char* out_unit);
+DllExport int MDI_Conversion_Factor(const char* in_unit, const char* out_unit, double* conv);
 
 // functions for managing Nodes, Commands, and Callbacks
 DllExport int MDI_Register_Node(const char* node_name);

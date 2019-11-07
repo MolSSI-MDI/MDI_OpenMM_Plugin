@@ -90,7 +90,7 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@ENERGY", "<PE_NUC");
 
     // Accept the MDI communicator
-    this->mdi_comm = MDI_Accept_Communicator();
+    MDI_Accept_Communicator(&this->mdi_comm);
 }
 
 void MDIServer::run() {
@@ -158,7 +158,8 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
     this->send_masses(context);
 
     // +FORCES
-    double conv = MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol");
+    double conv;
+    MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol",&conv);
     vector<double> forces;
     for (int i = 0; i < 3*natoms; i++) {
       forces.push_back( 100.0 / conv );
@@ -173,7 +174,8 @@ vector<Vec3> MDIServer::send_coords(ContextImpl& context) {
     int natoms = system.getNumParticles();
     vector<Vec3> positions;
     context.getPositions(positions);
-    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
+    double conv;
+    MDI_Conversion_Factor("nanometer","atomic_unit_of_length",&conv);
     for (int iatom = 0; iatom < natoms; iatom++) {
       positions[iatom][0] *= conv;
       positions[iatom][1] *= conv;
@@ -199,7 +201,8 @@ void MDIServer::recv_coords(ContextImpl& context, vector<Vec3>* coords_in) {
       }
     }
 
-    double conv = MDI_Conversion_Factor("atomic_unit_of_length","nanometer");
+    double conv;
+    MDI_Conversion_Factor("atomic_unit_of_length","nanometer",&conv);
     for (int i = 0; i < natoms; i++) {
       positions[i][0] *= conv;
       positions[i][1] *= conv;
@@ -213,8 +216,11 @@ vector<Vec3> MDIServer::send_velocities(ContextImpl& context) {
     int natoms = system.getNumParticles();
     vector<Vec3> velocities;
     context.getVelocities(velocities);
-    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
-    conv /= MDI_Conversion_Factor("picosecond","atomic_unit_of_time");
+    double conv;
+    MDI_Conversion_Factor("nanometer","atomic_unit_of_length",&conv);
+    double len_conv;
+    MDI_Conversion_Factor("picosecond","atomic_unit_of_time",&len_conv);
+    conv /= len_conv;
     for (int iatom = 0; iatom < natoms; iatom++) {
       velocities[iatom][0] *= conv;
       velocities[iatom][1] *= conv;
@@ -240,8 +246,11 @@ void MDIServer::recv_velocities(ContextImpl& context, vector<Vec3>* velocities_i
       }
     }
 
-    double conv = MDI_Conversion_Factor("atomic_unit_of_length","nanometer");
-    conv /= MDI_Conversion_Factor("atomic_unit_of_time","picosecond");
+    double conv;
+    MDI_Conversion_Factor("atomic_unit_of_length","nanometer",&conv);
+    double time_conv;
+    MDI_Conversion_Factor("atomic_unit_of_time","picosecond",&time_conv);
+    conv /= time_conv;
     for (int i = 0; i < natoms; i++) {
       velocities[i][0] *= conv;
       velocities[i][1] *= conv;
@@ -255,8 +264,11 @@ vector<Vec3> MDIServer::send_forces(ContextImpl& context) {
     int natoms = system.getNumParticles();
     vector<Vec3> forces;
     context.getForces(forces);
-    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
-    conv *= MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
+    double conv;
+    MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
+    double len_conv;
+    MDI_Conversion_Factor("nanometer","atomic_unit_of_length",&len_conv);
+    conv *= len_conv;
     for (int iatom = 0; iatom < natoms; iatom++) {
       forces[iatom][0] *= conv;
       forces[iatom][1] *= conv;
@@ -269,7 +281,8 @@ vector<Vec3> MDIServer::send_forces(ContextImpl& context) {
 
 double MDIServer::send_time(ContextImpl& context) {
     double time = context.getTime();
-    double conv = MDI_Conversion_Factor("picosecond","atomic_unit_of_time");
+    double conv;
+    MDI_Conversion_Factor("picosecond","atomic_unit_of_time",&conv);
     time *= conv;
     printf("      time: %f\n",time);
     MDI_Send(&time, 1, MDI_DOUBLE, mdi_comm);
@@ -350,7 +363,8 @@ vector<int> MDIServer::send_dimensions(ContextImpl& context) {
 
 vector<double> MDIServer::send_cell(ContextImpl& context) {
     Vec3 cell1, cell2, cell3;
-    double conv = MDI_Conversion_Factor("nanometer","atomic_unit_of_length");
+    double conv;
+    MDI_Conversion_Factor("nanometer","atomic_unit_of_length",&conv);
     context.getPeriodicBoxVectors(cell1, cell2, cell3);
     vector <double> cell { 
         cell1[0] * conv, cell1[1] * conv, cell1[2] * conv,
@@ -368,7 +382,8 @@ double MDIServer::send_energy(ContextImpl& context) {
     double ke = state.getKineticEnergy();
     double pe = state.getPotentialEnergy();
     double energy = ke + pe;
-    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
+    double conv;
+    MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     energy *= conv;
     MDI_Send(&energy, 1, MDI_DOUBLE, mdi_comm);
     return energy;
@@ -378,7 +393,8 @@ double MDIServer::send_ke(ContextImpl& context) {
     // Compiles, but should be called outside the time step
     State state = context.getOwner().getState( State::Energy );
     double ke = state.getKineticEnergy();
-    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
+    double conv;
+    MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     ke *= conv;
     MDI_Send(&ke, 1, MDI_DOUBLE, mdi_comm);
     return ke;
@@ -392,7 +408,8 @@ double MDIServer::send_pe(ContextImpl& context) {
     // Compiles, but should be called outside the time step
     State state = context.getOwner().getState( State::Energy );
     double pe = state.getPotentialEnergy();
-    double conv = MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy");
+    double conv;
+    MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     pe *= conv;
     MDI_Send(&pe, 1, MDI_DOUBLE, mdi_comm);
     return pe;
@@ -426,7 +443,8 @@ void MDIServer::recv_cell(ContextImpl& context, vector<double>* cell_in) {
 	cell[i] = (*cell_in)[i];
       }
     }
-    double conv = MDI_Conversion_Factor("atomic_unit_of_length","nanometer");
+    double conv;
+    MDI_Conversion_Factor("atomic_unit_of_length","nanometer",&conv);
     Vec3 cell1, cell2, cell3;
     cell1[0] = cell[0] * conv;
     cell1[1] = cell[1] * conv;
@@ -461,7 +479,8 @@ void MDIServer::add_forces(ContextImpl& context, Kernel& kernel, vector<double>*
       }
     }
 
-    double conv = MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol");
+    double conv;
+    MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol",&conv);
     for (int i = 0; i < 3*natoms; i++) {
       kernel_forces[i] *= conv;
     }
