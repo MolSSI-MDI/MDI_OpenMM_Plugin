@@ -24,4 +24,6 @@ class MDISimulation(mmapp.Simulation):
     def runMDI(self):
         self.server.run()
         for istep in range(10):
+            #new_state = self.context.getState(getEnergy = True)
+            #print("      ------------------- " + str(new_state.getKineticEnergy()))
             self.step(1)

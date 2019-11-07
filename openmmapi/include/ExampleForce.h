@@ -115,15 +115,17 @@ public:
     /**
      * Returns the MDI_Comm
      */
+    /*
     MDI_Comm getMDIComm() const {
       return this->mdi_comm;
     }
+    */
 protected:
     OpenMM::ForceImpl* createImpl() const;
 private:
     class BondInfo;
     std::vector<BondInfo> bonds;
-    MDI_Comm mdi_comm;
+    //MDI_Comm mdi_comm;
     MDIServer& server;
 };
 

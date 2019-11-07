@@ -41,11 +41,11 @@ using namespace std;
 ExampleForce::ExampleForce(string mdi_options, MDIServer& server) : server(server) {
     // Initialize MDI
     //string mdi_options = "-name MM -role ENGINE -method TEST";
-    const char *options = mdi_options.c_str();
-    MDI_Init(options, NULL);
+    //const char *options = mdi_options.c_str();
+    //MDI_Init(options, NULL);
 
     // Accept the MDI communicator
-    this->mdi_comm = MDI_Accept_Communicator();
+    //this->mdi_comm = MDI_Accept_Communicator();
 }
 
 int ExampleForce::addBond(int particle1, int particle2, double length, double k) {
