@@ -94,17 +94,17 @@ DllExport double MDI_Conversion_Factor(const char* in_unit, const char* out_unit
 
 // functions for managing Nodes, Commands, and Callbacks
 DllExport int MDI_Register_Node(const char* node_name);
-  //DllExport bool MDI_Check_Node(const char* node_name);
+DllExport int MDI_Check_Node_Exists(const char* node_name, MDI_Comm comm, int* flag);
 DllExport int MDI_Get_NNodes(MDI_Comm comm, int* nnodes);
 DllExport int MDI_Get_Node(int index, MDI_Comm comm, char* name);
 DllExport int MDI_Register_Command(const char* node_name, const char* command_name);
-//DllExport bool MDI_Check_Command(const char* node_name, const char* command_name);
-DllExport int MDI_Get_NCommands(MDI_Comm comm, const char* node_name, int* ncommands);
+DllExport int MDI_Check_Command_Exists(const char* node_name, const char* command_name, MDI_Comm comm, int* flag);
+DllExport int MDI_Get_NCommands(const char* node_name, MDI_Comm comm, int* ncommands);
 DllExport int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name);
-//DllExport int MDI_Register_Callback(const char* node_name, const char* callback_name);
-//DllExport bool MDI_Check_Callback(const char* node_name, const char* callback_name);
-//DllExport int MDI_Get_NCallbacks(MDI_Comm comm, const char* node_name, int ncallbacks);
-//DllExport int MDI_Get_Callback(const char* node_name, int index, MDI_Comm comm, char* name);
+DllExport int MDI_Register_Callback(const char* node_name, const char* callback_name);
+DllExport int MDI_Check_Callback_Exists(const char* node_name, const char* callback_name, MDI_Comm comm, int* flag);
+DllExport int MDI_Get_NCallbacks(const char* node_name, MDI_Comm comm, int* ncallbacks);
+DllExport int MDI_Get_Callback(const char* node_name, int index, MDI_Comm comm, char* name);
 
 // only used internally by MDI
 DllExport void mdi_error(const char* message);

@@ -57,6 +57,10 @@ int vector_init(vector* v, size_t stride);
 int vector_push_back(vector* v, void* element);
 void* vector_get(vector* v, int index);
 
+int get_node_index(vector* v, const char* node_name);
+int get_command_index(node* n, const char* command_name);
+int get_callback_index(node* n, const char* callback_name);
+
 void mdi_error(const char* message);
 
 #endif
