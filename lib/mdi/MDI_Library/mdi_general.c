@@ -38,6 +38,7 @@ int general_init(const char* options, void* world_comm) {
   vector_init(&nodes, sizeof(node));
 
   /////////////////////
+  /*
   printf("--------------------------------------------------------------------------\n");
   MDI_Register_Node("@FORCES");
   char node_name[COMMAND_LENGTH];
@@ -52,6 +53,7 @@ int general_init(const char* options, void* world_comm) {
   MDI_Get_NNodes(MDI_NULL_COMM, &nnodes);
   printf("Number of nodes: %d\n",nnodes);
   printf("--------------------------------------------------------------------------\n");
+  */
   /////////////////////
 
   char* strtol_ptr;

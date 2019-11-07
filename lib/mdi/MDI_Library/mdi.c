@@ -645,6 +645,10 @@ void MDI_Set_World_Rank(int world_rank_in)
 
 int MDI_Register_Node(const char* node_name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Register_Node called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Cannot register name with length greater than MDI_COMMAND_LENGTH");
@@ -670,6 +674,10 @@ int MDI_Register_Node(const char* node_name)
 
 int MDI_Check_Node_Exists(const char* node_name, MDI_Comm comm, int* flag)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Check_Node_Exists called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -688,12 +696,20 @@ int MDI_Check_Node_Exists(const char* node_name, MDI_Comm comm, int* flag)
 
 int MDI_Get_NNodes(MDI_Comm comm, int* nnodes)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_NNodes called but MDI has not been initialized");
+  }
+
   *nnodes = nodes.size;
   return 0;
 }
 
 int MDI_Get_Node(int index, MDI_Comm comm, char* name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_Node called but MDI has not been initialized");
+  }
+
   node* ret_node = vector_get(&nodes, index);
   strcpy(name, &ret_node->name[0]);
   return 0;
@@ -701,6 +717,10 @@ int MDI_Get_Node(int index, MDI_Comm comm, char* name)
 
 int MDI_Register_Command(const char* node_name, const char* command_name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Register_Command called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -734,6 +754,10 @@ int MDI_Register_Command(const char* node_name, const char* command_name)
 
 int MDI_Check_Command_Exists(const char* node_name, const char* command_name, MDI_Comm comm, int* flag)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Check_Command_Exists called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -764,6 +788,10 @@ int MDI_Check_Command_Exists(const char* node_name, const char* command_name, MD
 
 int MDI_Get_NCommands(const char* node_name, MDI_Comm comm, int* ncommands)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_NCommands called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -782,6 +810,10 @@ int MDI_Get_NCommands(const char* node_name, MDI_Comm comm, int* ncommands)
 
 int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_Command called but MDI has not been initialized");
+  }
+
   // find the node
   int node_index = get_node_index(&nodes, node_name);
   if ( node_index == -1 ) {
@@ -800,6 +832,10 @@ int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name)
 
 int MDI_Register_Callback(const char* node_name, const char* callback_name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Register_Callback called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -833,6 +869,10 @@ int MDI_Register_Callback(const char* node_name, const char* callback_name)
 
 int MDI_Check_Callback_Exists(const char* node_name, const char* callback_name, MDI_Comm comm, int* flag)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Check_Callback_Exists called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -863,6 +903,10 @@ int MDI_Check_Callback_Exists(const char* node_name, const char* callback_name, 
 
 int MDI_Get_NCallbacks(const char* node_name, MDI_Comm comm, int* ncallbacks)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_NCallbacks called but MDI has not been initialized");
+  }
+
   // confirm that the node_name size is not greater than MDI_COMMAND_LENGTH
   if ( strlen(node_name) > COMMAND_LENGTH ) {
     mdi_error("Node name is greater than MDI_COMMAND_LENGTH");
@@ -881,6 +925,10 @@ int MDI_Get_NCallbacks(const char* node_name, MDI_Comm comm, int* ncallbacks)
 
 int MDI_Get_Callback(const char* node_name, int index, MDI_Comm comm, char* name)
 {
+  if ( is_initialized == 0 ) {
+    mdi_error("MDI_Get_Callback called but MDI has not been initialized");
+  }
+
   // find the node
   int node_index = get_node_index(&nodes, node_name);
   if ( node_index == -1 ) {
