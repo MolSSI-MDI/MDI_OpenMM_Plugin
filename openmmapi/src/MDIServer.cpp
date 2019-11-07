@@ -52,8 +52,13 @@ void MDIServer::init(string mdi_options) {
     //MPI_Init(NULL, NULL);
 
     // Initialize MDI
+    int ierr;
     const char *options = mdi_options.c_str();
-    MDI_Init(options, NULL);
+    printf("   Engine calling mdi_init\n");
+    ierr = MDI_Init(options, NULL);
+    if ( ierr != 0 ) {
+      throw OpenMMException("Unable to initialize MDI\n");
+    }
 
     // Register the @UPDATE node
     MDI_Register_Node("@UPDATE");
@@ -69,6 +74,11 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@UPDATE", "<CELL");
     MDI_Register_Command("@UPDATE", ">CELL");
     MDI_Register_Command("@UPDATE", "<MASSES");
+    MDI_Register_Command("@UPDATE", "@");
+    MDI_Register_Command("@UPDATE", "@ENERGY");
+    MDI_Register_Command("@UPDATE", "@EXIT");
+    MDI_Register_Command("@UPDATE", "@FORCES");
+    MDI_Register_Command("@UPDATE", "@UPDATE");
 
     // Register the @FORCES node
     MDI_Register_Node("@FORCES");
@@ -80,6 +90,11 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@FORCES", "<CELL");
     MDI_Register_Command("@FORCES", "<MASSES");
     MDI_Register_Command("@FORCES", "+FORCES");
+    MDI_Register_Command("@FORCES", "@");
+    MDI_Register_Command("@FORCES", "@ENERGY");
+    MDI_Register_Command("@FORCES", "@EXIT");
+    MDI_Register_Command("@FORCES", "@FORCES");
+    MDI_Register_Command("@FORCES", "@UPDATE");
 
     // Register the @ENERGY node
     MDI_Register_Node("@ENERGY");
@@ -88,9 +103,23 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@ENERGY", "<KE_NUC");
     MDI_Register_Command("@ENERGY", "<PE");
     MDI_Register_Command("@ENERGY", "<PE_NUC");
+    MDI_Register_Command("@ENERGY", "@");
+    MDI_Register_Command("@ENERGY", "@ENERGY");
+    MDI_Register_Command("@ENERGY", "@EXIT");
+    MDI_Register_Command("@ENERGY", "@FORCES");
+    MDI_Register_Command("@ENERGY", "@UPDATE");
 
     // Accept the MDI communicator
-    MDI_Accept_Communicator(&this->mdi_comm);
+    printf("   Engine calling mdi_accept_communicator\n");
+    ierr = MDI_Accept_Communicator(&this->mdi_comm);
+    if ( ierr != 0 ) {
+      throw OpenMMException("Unable to accept communicator from the driver\n");
+    }
+    printf("   Engine finished init\n");
+
+    // Initialize the target node
+    this->target_node = new char[MDI_COMMAND_LENGTH];
+    target_node[0] = '\0';
 }
 
 void MDIServer::run() {
@@ -98,8 +127,116 @@ void MDIServer::run() {
 }
 
 void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
+    printf("   Engine in listen\n");
     const OpenMM::System& system = context.getSystem();
     int supported;
+    int ierr;
+
+    char *command = new char[MDI_COMMAND_LENGTH];
+
+    // If there is a target node, check if this is the target node
+    if ( strcmp( this->target_node, "" ) != 0 ) {
+      if ( strcmp( this->target_node, "@" ) == 0 ) {
+	// The engine was searching for the next node, so this node counts
+	target_node[0] = '\0';
+      }
+      else if ( strcmp( this->target_node, node.c_str() ) == 0 ) {
+	// This is the node the engine was searching for
+	target_node[0] = '\0';
+      }
+    }
+
+    // Enter server mode, listening for commands from the driver
+    while ( strcmp( this->target_node, "" ) == 0 ) {
+
+      // Receive a new command from the driver
+      ierr = MDI_Recv_Command(command, this->mdi_comm);
+      if ( ierr != 0 ) {
+	throw OpenMMException("Unable to receive command from the driver\n");
+      }
+      printf("   MDI COMMAND: %s\n",command);
+
+      // Confirm that this command is supported
+      MDI_Check_Command_Exists(node.c_str(), command, MDI_NULL_COMM, &supported);
+      if ( supported != 1 ) {
+	throw OpenMMException("Received unsupported MDI command\n");
+      }
+
+      // Respond to the command
+      if ( strcmp( command, "<CELL" )  == 0 ) {
+	this->send_cell(context);
+      }
+      else if ( strcmp( command, ">CELL" )  == 0 ) {
+	this->recv_cell(context);
+      }
+      else if ( strcmp( command, "<CHARGES" ) == 0 ) {
+	this->send_charges(context);
+      }
+      else if ( strcmp( command, "<COORDS" )  == 0 ) {
+	this->send_coords(context);
+      }
+      else if ( strcmp( command, ">COORDS" ) == 0 ) {
+	this->recv_coords(context);
+      }
+      else if ( strcmp( command, "<DIMENSIONS" )  == 0 ) {
+	this->send_dimensions(context);
+      }
+      else if ( strcmp( command, "<ENERGY" ) == 0 ) {
+	this->send_energy(context);
+      }
+      else if ( strcmp( command, "<FORCES" ) == 0 ) {
+	this->send_forces(context);
+      }
+      else if ( strcmp( command, "+FORCES" ) == 0 ) {
+	this->add_forces(context, kernel);
+      }
+      else if ( strcmp( command, "<KE" ) == 0 ) {
+	this->send_ke(context);
+      }
+      else if ( strcmp( command, "<KE_NUC" ) == 0 ) {
+	this->send_ke_nuc(context);
+      }
+      else if ( strcmp( command, "<MASSES" ) == 0 ) {
+	this->send_masses(context);
+      }
+      else if ( strcmp( command, "<NATOMS" ) == 0 ) {
+	this->send_natoms(context);
+      }
+      else if ( strcmp( command, "<PE" ) == 0 ) {
+	this->send_pe(context);
+      }
+      else if ( strcmp( command, "<PE_NUC" ) == 0 ) {
+	this->send_pe_nuc(context);
+      }
+      else if ( strcmp( command, "<TIME" ) == 0 ) {
+	this->send_time(context);
+      }
+      else if ( strcmp( command, "<VELOCITIES" ) == 0 ) {
+        this->send_velocities(context);
+      }
+      else if ( strcmp( command, ">VELOCITIES" ) == 0 ) {
+	this->recv_velocities(context);
+      }
+      else if ( strcmp( command, "@" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+      else if ( strcmp( command, "@ENERGY" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+      else if ( strcmp( command, "@EXIT" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+      else if ( strcmp( command, "@FORCES" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+      else if ( strcmp( command, "@UPDATE" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+    }
+
+    delete [] command;
+
+    return;
 
     // <COORDS
     vector<Vec3> positions = this->send_coords(context);

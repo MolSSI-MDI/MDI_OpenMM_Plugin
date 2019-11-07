@@ -146,22 +146,14 @@ public:
     void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::vector<double>* forces_in = nullptr);
     /**
      * Additional responses needed:
-     * @
      * <@
-     * @COORDS
-     * @FORCES
      * @INIT_MD
      * @INIT_OPTG
      * @GLOBAL
-     * @PRE-FORCES
-     * EXIT
-     * <NCOMMANDS
-     * <COMMANDS
-     * <CALLBACKS
      */
 private:
     MDI_Comm mdi_comm;
-    //std::vector<MDINode*> nodes;
+    char *target_node;
 };
 
 
