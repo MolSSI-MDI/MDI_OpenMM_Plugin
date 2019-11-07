@@ -647,7 +647,13 @@ void MDI_Set_World_Rank(int world_rank_in)
   set_world_rank(world_rank_in);
 }
 
-
+/*! \brief Register a node
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node.
+ */
 int MDI_Register_Node(const char* node_name)
 {
   if ( is_initialized == 0 ) {
@@ -677,6 +683,18 @@ int MDI_Register_Node(const char* node_name)
   return 0;
 }
 
+/*! \brief Check whether a node is supported on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      flag
+ *                   On return, 1 if the node is supported and 0 otherwise.
+ */
 int MDI_Check_Node_Exists(const char* node_name, MDI_Comm comm, int* flag)
 {
   if ( is_initialized == 0 ) {
@@ -699,6 +717,16 @@ int MDI_Check_Node_Exists(const char* node_name, MDI_Comm comm, int* flag)
   return 0;
 }
 
+/*! \brief Get the number of nodes on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      nnodes
+ *                   On return, the number of nodes supported by the engine.
+ */
 int MDI_Get_NNodes(MDI_Comm comm, int* nnodes)
 {
   if ( is_initialized == 0 ) {
@@ -709,6 +737,18 @@ int MDI_Get_NNodes(MDI_Comm comm, int* nnodes)
   return 0;
 }
 
+/*! \brief Get the name of a node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       index
+ *                   Index of the node on the specified engine.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      name
+ *                   On return, the name of the node
+ */
 int MDI_Get_Node(int index, MDI_Comm comm, char* name)
 {
   if ( is_initialized == 0 ) {
@@ -720,6 +760,15 @@ int MDI_Get_Node(int index, MDI_Comm comm, char* name)
   return 0;
 }
 
+/*! \brief Register a command on a specified node
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node on which the command will be registered.
+ * \param [in]       command_name
+ *                   Name of the command.
+ */
 int MDI_Register_Command(const char* node_name, const char* command_name)
 {
   if ( is_initialized == 0 ) {
@@ -757,6 +806,20 @@ int MDI_Register_Command(const char* node_name, const char* command_name)
   return 0;
 }
 
+/*! \brief Check whether a command is supported on specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the command's node.
+ * \param [in]       command_name
+ *                   Name of the command.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      flag
+ *                   On return, 1 if the command is supported and 0 otherwise.
+ */
 int MDI_Check_Command_Exists(const char* node_name, const char* command_name, MDI_Comm comm, int* flag)
 {
   if ( is_initialized == 0 ) {
@@ -791,6 +854,19 @@ int MDI_Check_Command_Exists(const char* node_name, const char* command_name, MD
   return 0;
 }
 
+/*! \brief Get the number of commands supported for a specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      nnodes
+ *                   On return, the number of commands supported on the specified engine
+ *                   on the specified node.
+ */
 int MDI_Get_NCommands(const char* node_name, MDI_Comm comm, int* ncommands)
 {
   if ( is_initialized == 0 ) {
@@ -813,6 +889,20 @@ int MDI_Get_NCommands(const char* node_name, MDI_Comm comm, int* ncommands)
   return 0;
 }
 
+/*! \brief Get the name of a command on a specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node on which the command is located.
+ * \param [in]       index
+ *                   Index of the command on the specified node.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      name
+ *                   On return, the name of the command
+ */
 int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name)
 {
   if ( is_initialized == 0 ) {
@@ -835,6 +925,15 @@ int MDI_Get_Command(const char* node_name, int index, MDI_Comm comm, char* name)
   return 0;
 }
 
+/*! \brief Register a callback on a specified node
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node on which the callback will be registered.
+ * \param [in]       callback_name
+ *                   Name of the callback.
+ */
 int MDI_Register_Callback(const char* node_name, const char* callback_name)
 {
   if ( is_initialized == 0 ) {
@@ -872,6 +971,20 @@ int MDI_Register_Callback(const char* node_name, const char* callback_name)
   return 0;
 }
 
+/*! \brief Check whether a callback exists on specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the callbacks's node.
+ * \param [in]       command_name
+ *                   Name of the callback.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      flag
+ *                   On return, 1 if the callback is supported and 0 otherwise.
+ */
 int MDI_Check_Callback_Exists(const char* node_name, const char* callback_name, MDI_Comm comm, int* flag)
 {
   if ( is_initialized == 0 ) {
@@ -906,6 +1019,19 @@ int MDI_Check_Callback_Exists(const char* node_name, const char* callback_name, 
   return 0;
 }
 
+/*! \brief Get the number of callbacks on a specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      ncallbacks
+ *                   On return, the number of callbacks on the specified node
+ *                   on the specified engine.
+ */
 int MDI_Get_NCallbacks(const char* node_name, MDI_Comm comm, int* ncallbacks)
 {
   if ( is_initialized == 0 ) {
@@ -928,6 +1054,20 @@ int MDI_Get_NCallbacks(const char* node_name, MDI_Comm comm, int* ncallbacks)
   return 0;
 }
 
+/*! \brief Get the name of a callback on a specified node on a specified engine
+ *
+ * The function returns \p 0 on a success.
+ *
+ * \param [in]       node_name
+ *                   Name of the node on which the callback is located.
+ * \param [in]       index
+ *                   Index of the callback on the specified node.
+ * \param [in]       comm
+ *                   MDI communicator of the engine.  If comm is set to 
+ *                   MDI_NULL_COMM, the function will check for the calling engine.
+ * \param [out]      name
+ *                   On return, the name of the callback
+ */
 int MDI_Get_Callback(const char* node_name, int index, MDI_Comm comm, char* name)
 {
   if ( is_initialized == 0 ) {
