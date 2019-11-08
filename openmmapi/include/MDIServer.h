@@ -57,9 +57,9 @@ public:
      */
     MDIServer(std::string mdi_options);
     /**
-     * Initialize the MDIServer.
+     * Destroy an MDIServer.
      */
-    void init(std::string mdi_options);
+    ~MDIServer();
     /**
      * Set whether the MDIServer is currently active.
      */

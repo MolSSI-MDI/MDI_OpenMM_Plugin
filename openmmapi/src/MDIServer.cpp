@@ -43,10 +43,6 @@ using namespace OpenMM;
 using namespace std;
 
 MDIServer::MDIServer(string mdi_options) {
-  this->init(mdi_options);
-}
-
-void MDIServer::init(string mdi_options) {
     // Initialize MPI
     MPI_Init(NULL, NULL);
     MPI_Comm world_comm = MPI_COMM_WORLD;
@@ -161,6 +157,10 @@ void MDIServer::init(string mdi_options) {
     // Initialize the target node
     this->target_node = new char[MDI_COMMAND_LENGTH];
     target_node[0] = '\0';
+}
+
+MDIServer::~MDIServer() {
+    MPI_Finalize();
 }
 
 void MDIServer::setActive(bool active) {
