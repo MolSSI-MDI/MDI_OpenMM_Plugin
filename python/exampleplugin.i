@@ -44,14 +44,14 @@ namespace ExamplePlugin {
 
 class MDIServer {
 public:
-    MDIServer();
+    MDIServer(std::string mdi_options);
     void init(std::string mdi_options);
     void run();
 };
 
 class ExampleForce : public OpenMM::Force {
 public:
-    ExampleForce(std::string, MDIServer& server);
+    ExampleForce(std::string);
 
     int getNumBonds() const;
 
@@ -60,6 +60,7 @@ public:
     void setBondParameters(int index, int particle1, int particle2, double length, double k);
 
     void updateParametersInContext(OpenMM::Context& context);
+    void mdiListen(std::string node, OpenMM::Context& context);
 
     /*
      * The reference parameters to this function are output values.

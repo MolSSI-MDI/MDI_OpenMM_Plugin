@@ -51,7 +51,7 @@ public:
     /**
      * Create an ExampleForce.
      */
-    ExampleForce(std::string mdi_options, MDIServer& server);
+    ExampleForce(std::string mdi_options);
     /**
      * Get the number of bond stretch terms in the potential function
      */
@@ -107,26 +107,23 @@ public:
         return false;
     }
     /**
-     * Returns the server
+     * Causes MDI to begin listening for commands from the driver
      */
-    MDIServer& getServer() const {
-      return this->server;
-    }
+    void mdiListen(std::string node, OpenMM::Context& context);
     /**
-     * Returns the MDI_Comm
+     * Returns mdiOptions
      */
-    /*
-    MDI_Comm getMDIComm() const {
-      return this->mdi_comm;
+    std::string getMDIOptions() const {
+      return this->mdiOptions;
     }
-    */
 protected:
     OpenMM::ForceImpl* createImpl() const;
 private:
     class BondInfo;
     std::vector<BondInfo> bonds;
     //MDI_Comm mdi_comm;
-    MDIServer& server;
+    //MDIServer& server;
+    std::string mdiOptions;
 };
 
 /**

@@ -55,7 +55,7 @@ public:
     /**
      * Create an MDIServer.
      */
-    MDIServer();
+    MDIServer(std::string mdi_options);
     /**
      * Initialize the MDIServer.
      */

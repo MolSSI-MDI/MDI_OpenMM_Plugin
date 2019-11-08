@@ -51,20 +51,24 @@ using namespace OpenMM;
 using namespace std;
 
 ExampleForceImpl::ExampleForceImpl(const ExampleForce& owner) : owner(owner) {
+  this->server = nullptr;
 }
 
 ExampleForceImpl::~ExampleForceImpl() {
+  if ( this->server != nullptr ) {
+    delete this->server;
+  }
 }
 
 void ExampleForceImpl::initialize(ContextImpl& context) {
     kernel = context.getPlatform().createKernel(CalcExampleForceKernel::Name(), context);
     kernel.getAs<CalcExampleForceKernel>().initialize(context.getSystem(), owner);
+    this->server = new MDIServer(owner.getMDIOptions());
 }
 
 double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeForces, bool includeEnergy, int groups) {
     printf("   @FORCES %d %d\n", includeForces, includeEnergy);
-    MDIServer& server = owner.getServer();
-    server.listen("@FORCES", context, kernel);
+    this->server->listen("@FORCES", context, kernel);
 
     if ((groups&(1<<owner.getForceGroup())) != 0)
         return kernel.getAs<CalcExampleForceKernel>().execute(context, includeForces, includeEnergy);
@@ -73,10 +77,12 @@ double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeF
 
 void ExampleForceImpl::updateContextState(OpenMM::ContextImpl& context, bool& forcesInvalid) {
     printf("   @UPDATE\n");
-    MDIServer& server = owner.getServer();
-    server.listen("@UPDATE", context, kernel);
+    this->server->listen("@UPDATE", context, kernel);
 }
 
+void ExampleForceImpl::mdiListen(string node, OpenMM::ContextImpl& context) {
+    this->server->listen(node, context, kernel);
+}
 
 std::vector<std::string> ExampleForceImpl::getKernelNames() {
     std::vector<std::string> names;

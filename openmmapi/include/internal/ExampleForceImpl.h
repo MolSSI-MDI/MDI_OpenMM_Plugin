@@ -63,9 +63,11 @@ public:
     std::vector<std::string> getKernelNames();
     std::vector<std::pair<int, int> > getBondedParticles() const;
     void updateParametersInContext(OpenMM::ContextImpl& context);
+    void mdiListen(std::string node, OpenMM::ContextImpl& context);
 private:
     const ExampleForce& owner;
     OpenMM::Kernel kernel;
+    MDIServer* server;
 };
 
 } // namespace ExamplePlugin

@@ -38,7 +38,7 @@ using namespace ExamplePlugin;
 using namespace OpenMM;
 using namespace std;
 
-ExampleForce::ExampleForce(string mdi_options, MDIServer& server) : server(server) {
+ExampleForce::ExampleForce(string mdi_options) {
     // Initialize MDI
     //string mdi_options = "-name MM -role ENGINE -method TEST";
     //const char *options = mdi_options.c_str();
@@ -46,6 +46,7 @@ ExampleForce::ExampleForce(string mdi_options, MDIServer& server) : server(serve
 
     // Accept the MDI communicator
     //this->mdi_comm = MDI_Accept_Communicator();
+    this->mdiOptions = mdi_options;
 }
 
 int ExampleForce::addBond(int particle1, int particle2, double length, double k) {
@@ -75,4 +76,8 @@ ForceImpl* ExampleForce::createImpl() const {
 
 void ExampleForce::updateParametersInContext(Context& context) {
     dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).updateParametersInContext(getContextImpl(context));
+}
+
+void ExampleForce::mdiListen(std::string node, Context& context) {
+    dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).mdiListen(node, getContextImpl(context));
 }
