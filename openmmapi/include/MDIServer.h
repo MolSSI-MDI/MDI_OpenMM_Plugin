@@ -69,6 +69,10 @@ public:
      */
     std::string listen(std::string node, OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
     /**
+     * Get the target node.
+     */
+    std::string getTargetNode();
+    /**
      * Get the NonbondedForce.
      */
     const OpenMM::NonbondedForce* get_nonbonded_force(OpenMM::ContextImpl& context);

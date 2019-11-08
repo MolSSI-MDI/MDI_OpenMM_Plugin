@@ -29,11 +29,11 @@ class MDISimulation(mmapp.Simulation):
         #    #print("      ------------------- " + str(new_state.getKineticEnergy()))
         #    self.step(1)
 
-        #self.step(1)
-        #new_state = self.context.getState(getEnergy = True)
-        #new_state = self.context.getState(getEnergy = True)
-        #new_state = self.context.getState(getEnergy = True)
-        #new_state = self.context.getState(getEnergy = True)
+        self.step(1)
+        new_state = self.context.getState(getEnergy = True)
+        new_state = self.context.getState(getEnergy = True)
+        new_state = self.context.getState(getEnergy = True)
+        new_state = self.context.getState(getEnergy = True)
 
         self.mdi_force.setActive(True, self.context)
 
@@ -52,6 +52,7 @@ class MDISimulation(mmapp.Simulation):
             elif command == "@":
                 if current_simulation == "MD":
                     self.step(1)
+                    command = self.mdi_force.getTargetNode(self.context)
                 else:
                     raise Exception("Cannot proceed to the next node unless an MD simulation has been started")
 
@@ -64,12 +65,14 @@ class MDISimulation(mmapp.Simulation):
             elif command == "@UPDATE":
                 if current_simulation == "MD":
                     self.step(1)
+                    command = self.mdi_force.getTargetNode(self.context)
                 else:
                     raise Exception("Cannot proceed to the @UPDATE node unless an MD simulation has been started")
 
             elif command == "@FORCES":
                 if current_simulation == "MD":
                     self.step(1)
+                    command = self.mdi_force.getTargetNode(self.context)
                 else:
                     raise Exception("Cannot proceed to the @FORCES node unless an MD simulation has been started")
 

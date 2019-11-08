@@ -64,6 +64,7 @@ public:
     std::vector<std::pair<int, int> > getBondedParticles() const;
     void updateParametersInContext(OpenMM::ContextImpl& context);
     std::string mdiListen(std::string node, OpenMM::ContextImpl& context);
+    std::string getTargetNode();
     void setActive(bool active);
 private:
     const ExampleForce& owner;

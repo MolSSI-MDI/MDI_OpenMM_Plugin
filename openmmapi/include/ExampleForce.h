@@ -111,6 +111,10 @@ public:
      */
     std::string mdiListen(std::string node, OpenMM::Context& context);
     /**
+     * Returns the server's target node
+     */
+    std::string getTargetNode(OpenMM::Context& context);
+    /**
      * Returns mdiOptions
      */
     std::string getMDIOptions() const {

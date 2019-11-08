@@ -168,6 +168,11 @@ void MDIServer::setActive(bool active) {
   this->is_active = active;
 }
 
+std::string MDIServer::getTargetNode() {
+  std::string target( this->target_node );
+  return target;
+}
+
 std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
     printf("   Engine at node: %s %d\n",node.c_str(), this->is_active);
 
@@ -510,6 +515,7 @@ vector<double> MDIServer::send_cell(ContextImpl& context) {
 
 double MDIServer::send_energy(ContextImpl& context) {
     // Compiles, but should be called outside the time step
+    this->setActive(false);
     State state = context.getOwner().getState( State::Energy );
     double ke = state.getKineticEnergy();
     double pe = state.getPotentialEnergy();
@@ -518,17 +524,20 @@ double MDIServer::send_energy(ContextImpl& context) {
     MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     energy *= conv;
     MDI_Send(&energy, 1, MDI_DOUBLE, mdi_comm);
+    this->setActive(true);
     return energy;
 }
 
 double MDIServer::send_ke(ContextImpl& context) {
     // Compiles, but should be called outside the time step
+    this->setActive(false);
     State state = context.getOwner().getState( State::Energy );
     double ke = state.getKineticEnergy();
     double conv;
     MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     ke *= conv;
     MDI_Send(&ke, 1, MDI_DOUBLE, mdi_comm);
+    this->setActive(true);
     return ke;
 }
 
@@ -538,12 +547,14 @@ double MDIServer::send_ke_nuc(ContextImpl& context) {
 
 double MDIServer::send_pe(ContextImpl& context) {
     // Compiles, but should be called outside the time step
+    this->setActive(false);
     State state = context.getOwner().getState( State::Energy );
     double pe = state.getPotentialEnergy();
     double conv;
     MDI_Conversion_Factor("kilojoule_per_mol","atomic_unit_of_energy",&conv);
     pe *= conv;
     MDI_Send(&pe, 1, MDI_DOUBLE, mdi_comm);
+    this->setActive(true);
     return pe;
 }
 

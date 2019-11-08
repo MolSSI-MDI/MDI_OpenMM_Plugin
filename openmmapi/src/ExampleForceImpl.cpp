@@ -82,6 +82,10 @@ std::string ExampleForceImpl::mdiListen(string node, OpenMM::ContextImpl& contex
     return this->server->listen(node, context, kernel);
 }
 
+std::string ExampleForceImpl::getTargetNode() {
+    return this->server->getTargetNode();
+}
+
 void ExampleForceImpl::setActive(bool active) {
     this->server->setActive(active);
 }

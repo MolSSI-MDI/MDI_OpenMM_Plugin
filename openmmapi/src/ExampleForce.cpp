@@ -82,6 +82,10 @@ std::string ExampleForce::mdiListen(std::string node, Context& context) {
     return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).mdiListen(node, getContextImpl(context));
 }
 
+std::string ExampleForce::getTargetNode(Context& context) {
+    return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).getTargetNode();
+}
+
 void ExampleForce::setActive(bool active, Context& context) {
     return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).setActive(active);
 }
