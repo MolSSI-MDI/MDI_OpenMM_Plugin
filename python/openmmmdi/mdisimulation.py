@@ -29,6 +29,8 @@ class MDISimulation(mmapp.Simulation):
         #    #print("      ------------------- " + str(new_state.getKineticEnergy()))
         #    self.step(1)
 
+        #new_state = self.context.getState(getEnergy = True)
+
         command = "@GLOBAL"
         current_simulation = ""
         while command != "EXIT":

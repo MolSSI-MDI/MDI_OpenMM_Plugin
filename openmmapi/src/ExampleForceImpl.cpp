@@ -67,7 +67,6 @@ void ExampleForceImpl::initialize(ContextImpl& context) {
 }
 
 double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeForces, bool includeEnergy, int groups) {
-    printf("   @FORCES %d %d\n", includeForces, includeEnergy);
     this->server->listen("@FORCES", context, kernel);
 
     if ((groups&(1<<owner.getForceGroup())) != 0)
@@ -76,7 +75,6 @@ double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeF
 }
 
 void ExampleForceImpl::updateContextState(OpenMM::ContextImpl& context, bool& forcesInvalid) {
-    printf("   @UPDATE\n");
     this->server->listen("@UPDATE", context, kernel);
 }
 

@@ -94,7 +94,10 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@INIT_MD", ">CELL");
     MDI_Register_Command("@INIT_MD", "<MASSES");
     MDI_Register_Command("@INIT_MD", "@");
+    MDI_Register_Command("@INIT_MD", "@ENERGY");
     MDI_Register_Command("@INIT_MD", "@GLOBAL");
+    MDI_Register_Command("@INIT_MD", "@FORCES");
+    MDI_Register_Command("@INIT_MD", "@UPDATE");
 
     // Register the @UPDATE node
     MDI_Register_Node("@UPDATE");
@@ -166,8 +169,7 @@ void MDIServer::run() {
 }
 
 std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
-  //void MDIServer::listen(ContextImpl& context, string node) {
-    printf("   Engine in listen\n");
+    printf("   Engine at node: %s\n",node.c_str());
     const OpenMM::System& system = context.getSystem();
     int supported;
     int ierr;
@@ -294,13 +296,20 @@ vector<Vec3> MDIServer::send_coords(ContextImpl& context) {
     context.getPositions(positions);
     double conv;
     MDI_Conversion_Factor("nanometer","atomic_unit_of_length",&conv);
+    //vector<double> coords;
+    //coords.resize( 3 * natoms );
     for (int iatom = 0; iatom < natoms; iatom++) {
       positions[iatom][0] *= conv;
       positions[iatom][1] *= conv;
       positions[iatom][2] *= conv;
+      /*
+      coords[3*iatom+0] = conv * positions[iatom][0];
+      coords[3*iatom+1] = conv * positions[iatom][1];
+      coords[3*iatom+2] = conv * positions[iatom][2];
+      */
     }
     printf("      pos: %f %f %f\n",positions[0][0],positions[0][1],positions[0][2]);
-    MDI_Send(&positions, 3*natoms, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&positions[0][0], 3*natoms, MDI_DOUBLE, mdi_comm);
     return positions;
 }
 
@@ -311,7 +320,7 @@ void MDIServer::recv_coords(ContextImpl& context, vector<Vec3>* coords_in) {
     vector<Vec3> positions;
     positions.resize(natoms);
     if ( coords_in == nullptr ) {
-      MDI_Recv(&positions, 3*natoms, MDI_DOUBLE, mdi_comm);
+      MDI_Recv(&positions[0][0], 3*natoms, MDI_DOUBLE, mdi_comm);
     }
     else {
       for (int i = 0; i < natoms; i++) {
@@ -345,7 +354,7 @@ vector<Vec3> MDIServer::send_velocities(ContextImpl& context) {
       velocities[iatom][2] *= conv;
     }
     printf("      vel: %f %f %f\n",velocities[0][0],velocities[0][1],velocities[0][2]);
-    MDI_Send(&velocities, 3*natoms, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&velocities[0][0], 3*natoms, MDI_DOUBLE, mdi_comm);
     return velocities;
 }
 
@@ -356,7 +365,7 @@ void MDIServer::recv_velocities(ContextImpl& context, vector<Vec3>* velocities_i
     vector<Vec3> velocities;
     velocities.resize(natoms);
     if ( velocities_in == nullptr ) {
-      MDI_Recv(&velocities, 3*natoms, MDI_DOUBLE, mdi_comm);
+      MDI_Recv(&velocities[0][0], 3*natoms, MDI_DOUBLE, mdi_comm);
     }
     else {
       for (int i = 0; i < natoms; i++) {
@@ -393,7 +402,7 @@ vector<Vec3> MDIServer::send_forces(ContextImpl& context) {
       forces[iatom][2] *= conv;
     }
     printf("      for: %f %f %f\n",forces[0][0],forces[0][1],forces[0][2]);
-    MDI_Send(&forces, 3*natoms, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&forces[0][0], 3*natoms, MDI_DOUBLE, mdi_comm);
     return forces;
 }
 
@@ -431,7 +440,7 @@ vector<double> MDIServer::send_charges(ContextImpl& context) {
       charges.push_back(charge);
     }
     printf("      charge: %f\n",charge);
-    MDI_Send(&charges, natoms, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&charges[0], natoms, MDI_DOUBLE, mdi_comm);
     return charges;
 }
 
@@ -474,7 +483,7 @@ vector<int> MDIServer::send_dimensions(ContextImpl& context) {
 	dimensions.push_back(1);
       }
     }
-    MDI_Send(&dimensions, 3, MDI_INT, mdi_comm);
+    MDI_Send(&dimensions[0], 3, MDI_INT, mdi_comm);
 
     return dimensions;
 }
@@ -490,7 +499,7 @@ vector<double> MDIServer::send_cell(ContextImpl& context) {
 	cell3[0] * conv, cell3[1] * conv, cell3[2] * conv,
 	0.0, 0.0, 0.0
     };
-    MDI_Send(&cell, 12, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&cell[0], 12, MDI_DOUBLE, mdi_comm);
     return cell;
 }
 
@@ -545,7 +554,7 @@ vector<double> MDIServer::send_masses(ContextImpl& context) {
       masses.push_back( system.getParticleMass(iatom) );
     }
     printf("      mass: %f\n",masses[0]);
-    MDI_Send(&masses, natoms, MDI_DOUBLE, mdi_comm);
+    MDI_Send(&masses[0], natoms, MDI_DOUBLE, mdi_comm);
     return masses;
 }
 
@@ -554,7 +563,7 @@ void MDIServer::recv_cell(ContextImpl& context, vector<double>* cell_in) {
     vector<double> cell;
     cell.resize(12);
     if ( cell_in == nullptr ) {
-      MDI_Recv(&cell, 12, MDI_DOUBLE, mdi_comm);
+      MDI_Recv(&cell[0], 12, MDI_DOUBLE, mdi_comm);
     }
     else {
       for (int i = 0; i < cell.size(); i++ ) {
@@ -589,7 +598,7 @@ void MDIServer::add_forces(ContextImpl& context, Kernel& kernel, vector<double>*
     vector<double> forces;
     forces.resize(3*natoms);
     if ( forces_in == nullptr ) {
-      MDI_Recv(&kernel_forces, 3*natoms, MDI_DOUBLE, mdi_comm);
+      MDI_Recv(&kernel_forces[0], 3*natoms, MDI_DOUBLE, mdi_comm);
     }
     else {
       for (int i = 0; i < 3*natoms; i++) {
