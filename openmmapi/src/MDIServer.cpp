@@ -34,11 +34,9 @@
 #include "internal/ExampleForceImpl.h"
 #include "openmm/OpenMMException.h"
 #include "openmm/internal/AssertionUtilities.h"
-//////////
 #include "ExampleKernels.h"
 #include "openmm/internal/ContextImpl.h"
 #include <mpi.h>
-//////////
 
 using namespace ExamplePlugin;
 using namespace OpenMM;
@@ -50,13 +48,14 @@ MDIServer::MDIServer(string mdi_options) {
 
 void MDIServer::init(string mdi_options) {
     // Initialize MPI
-    //MPI_Init(NULL, NULL);
+    MPI_Init(NULL, NULL);
+    MPI_Comm world_comm = MPI_COMM_WORLD;
 
     // Initialize MDI
     int ierr;
     const char *options = mdi_options.c_str();
     printf("   Engine calling mdi_init\n");
-    ierr = MDI_Init(options, NULL);
+    ierr = MDI_Init(options, &world_comm);
     if ( ierr != 0 ) {
       throw OpenMMException("Unable to initialize MDI\n");
     }
