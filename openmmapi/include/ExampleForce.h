@@ -109,7 +109,7 @@ public:
     /**
      * Causes MDI to begin listening for commands from the driver
      */
-    void mdiListen(std::string node, OpenMM::Context& context);
+    std::string mdiListen(std::string node, OpenMM::Context& context);
     /**
      * Returns mdiOptions
      */

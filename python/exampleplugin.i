@@ -2,6 +2,7 @@
 
 %import(module="simtk.openmm") "swig/OpenMMSwigHeaders.i"
 %include "swig/typemaps.i"
+%include "std_string.i"
 
 /*
  * The following lines are needed to handle std::vector.
@@ -60,7 +61,7 @@ public:
     void setBondParameters(int index, int particle1, int particle2, double length, double k);
 
     void updateParametersInContext(OpenMM::Context& context);
-    void mdiListen(std::string node, OpenMM::Context& context);
+    std::string mdiListen(std::string node, OpenMM::Context& context);
 
     /*
      * The reference parameters to this function are output values.

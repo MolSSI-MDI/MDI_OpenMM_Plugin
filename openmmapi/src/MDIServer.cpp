@@ -60,6 +60,41 @@ void MDIServer::init(string mdi_options) {
     if ( ierr != 0 ) {
       throw OpenMMException("Unable to initialize MDI\n");
     }
+    // Register the @GLOBAL node
+    MDI_Register_Node("@GLOBAL");
+    MDI_Register_Command("@GLOBAL", "<COORDS");
+    MDI_Register_Command("@GLOBAL", ">COORDS");
+    MDI_Register_Command("@GLOBAL", "EXIT");
+    MDI_Register_Command("@GLOBAL", "<VELOCITIES");
+    MDI_Register_Command("@GLOBAL", ">VELOCITIES");
+    MDI_Register_Command("@GLOBAL", "<FORCES");
+    MDI_Register_Command("@GLOBAL", "<TIME");
+    MDI_Register_Command("@GLOBAL", "<NATOMS");
+    MDI_Register_Command("@GLOBAL", "<CHARGES");
+    MDI_Register_Command("@GLOBAL", "<DIMENSIONS");
+    MDI_Register_Command("@GLOBAL", "<CELL");
+    MDI_Register_Command("@GLOBAL", ">CELL");
+    MDI_Register_Command("@GLOBAL", "<MASSES");
+    MDI_Register_Command("@GLOBAL", "@");
+    MDI_Register_Command("@GLOBAL", "@INIT_MD");
+
+    // Register the @INIT_MD node
+    MDI_Register_Node("@INIT_MD");
+    MDI_Register_Command("@INIT_MD", "<COORDS");
+    MDI_Register_Command("@INIT_MD", ">COORDS");
+    MDI_Register_Command("@INIT_MD", "EXIT");
+    MDI_Register_Command("@INIT_MD", "<VELOCITIES");
+    MDI_Register_Command("@INIT_MD", ">VELOCITIES");
+    MDI_Register_Command("@INIT_MD", "<FORCES");
+    MDI_Register_Command("@INIT_MD", "<TIME");
+    MDI_Register_Command("@INIT_MD", "<NATOMS");
+    MDI_Register_Command("@INIT_MD", "<CHARGES");
+    MDI_Register_Command("@INIT_MD", "<DIMENSIONS");
+    MDI_Register_Command("@INIT_MD", "<CELL");
+    MDI_Register_Command("@INIT_MD", ">CELL");
+    MDI_Register_Command("@INIT_MD", "<MASSES");
+    MDI_Register_Command("@INIT_MD", "@");
+    MDI_Register_Command("@INIT_MD", "@GLOBAL");
 
     // Register the @UPDATE node
     MDI_Register_Node("@UPDATE");
@@ -79,6 +114,7 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@UPDATE", "@");
     MDI_Register_Command("@UPDATE", "@ENERGY");
     MDI_Register_Command("@UPDATE", "@FORCES");
+    MDI_Register_Command("@UPDATE", "@GLOBAL");
     MDI_Register_Command("@UPDATE", "@UPDATE");
 
     // Register the @FORCES node
@@ -95,6 +131,7 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@FORCES", "@");
     MDI_Register_Command("@FORCES", "@ENERGY");
     MDI_Register_Command("@FORCES", "@FORCES");
+    MDI_Register_Command("@FORCES", "@GLOBAL");
     MDI_Register_Command("@FORCES", "@UPDATE");
 
     // Register the @ENERGY node
@@ -108,6 +145,7 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@ENERGY", "@");
     MDI_Register_Command("@ENERGY", "@ENERGY");
     MDI_Register_Command("@ENERGY", "@FORCES");
+    MDI_Register_Command("@ENERGY", "@GLOBAL");
     MDI_Register_Command("@ENERGY", "@UPDATE");
 
     // Accept the MDI communicator
@@ -127,7 +165,7 @@ void MDIServer::run() {
   return;
 }
 
-void MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
+std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
   //void MDIServer::listen(ContextImpl& context, string node) {
     printf("   Engine in listen\n");
     const OpenMM::System& system = context.getSystem();
@@ -186,14 +224,15 @@ void MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
       else if ( strcmp( command, "<ENERGY" ) == 0 ) {
 	this->send_energy(context);
       }
+      else if ( strcmp( command, "EXIT" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
       else if ( strcmp( command, "<FORCES" ) == 0 ) {
 	this->send_forces(context);
       }
-      /*
       else if ( strcmp( command, "+FORCES" ) == 0 ) {
 	this->add_forces(context, kernel);
       }
-      */
       else if ( strcmp( command, "<KE" ) == 0 ) {
 	this->send_ke(context);
       }
@@ -227,10 +266,13 @@ void MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
       else if ( strcmp( command, "@ENERGY" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
-      else if ( strcmp( command, "EXIT" ) == 0 ) {
+      else if ( strcmp( command, "@FORCES" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
-      else if ( strcmp( command, "@FORCES" ) == 0 ) {
+      else if ( strcmp( command, "@GLOBAL" ) == 0 ) {
+	strcpy( this->target_node, command );
+      }
+      else if ( strcmp( command, "@INIT_MD" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
       else if ( strcmp( command, "@UPDATE" ) == 0 ) {
@@ -240,72 +282,7 @@ void MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
 
     delete [] command;
 
-    return;
-
-    // <COORDS
-    vector<Vec3> positions = this->send_coords(context);
-
-    // >COORDS
-    this->recv_coords(context, &positions);
-
-    // <VELOCITIES
-    vector<Vec3> velocities = this->send_velocities(context);
-
-    // >VELOCITIES
-    this->recv_velocities(context, &velocities);
-
-    // <FORCES
-    this->send_forces(context);
-
-    // <TIME
-    this->send_time(context);
-
-    // <NATOMS
-    double natoms = this->send_natoms(context);
-
-    // <CHARGES
-    this->send_charges(context);
-
-    // <DIMENSIONS
-    this->send_dimensions(context);
-
-    // <CELL
-    this->send_cell(context);
-
-    // >CELL
-    vector<double> cell = this->send_cell(context);
-    this->recv_cell(context, &cell);
-
-    // <ENERGY
-    MDI_Check_Command_Exists(node.c_str(), "<ENERGY", MDI_NULL_COMM, &supported);
-    printf("         SUPPORTED: %d\n",supported);
-    if ( supported == 1 ) {
-      this->send_energy(context);
-    }
-
-    // <KE
-    //this->send_ke(context);
-
-    // <KE_NUC
-    //this->send_ke_nuc(context);
-
-    // <PE
-    //this->send_pe(context);
-
-    // <PE_NUC
-    //this->send_pe_nuc(context);
-
-    // <MASSES
-    this->send_masses(context);
-
-    // +FORCES
-    double conv;
-    MDI_Conversion_Factor("atomic_unit_of_energy","kilojoule_per_mol",&conv);
-    vector<double> forces;
-    for (int i = 0; i < 3*natoms; i++) {
-      forces.push_back( 100.0 / conv );
-    }
-    //this->add_forces(context, kernel, &forces);
+    return this->target_node;
 }
 
 

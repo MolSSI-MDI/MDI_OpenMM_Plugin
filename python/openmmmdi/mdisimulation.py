@@ -28,4 +28,47 @@ class MDISimulation(mmapp.Simulation):
         #    #new_state = self.context.getState(getEnergy = True)
         #    #print("      ------------------- " + str(new_state.getKineticEnergy()))
         #    self.step(1)
-        self.mdi_force.mdiListen("@ENERGY", self.context)
+
+        command = "@GLOBAL"
+        current_simulation = ""
+        while command != "EXIT":
+
+            if command == "@GLOBAL":
+                current_simulation = ""
+                command = self.mdi_force.mdiListen("@GLOBAL", self.context)
+
+            elif command == "@INIT_MD":
+                current_simulation = "MD"
+                command = self.mdi_force.mdiListen("@INIT_MD", self.context)
+
+            elif command == "@":
+                if current_simulation == "MD":
+                    self.step(1)
+                else:
+                    raise Exception("Cannot proceed to the next node unless an MD simulation has been started")
+
+            elif command == "@ENERGY":
+                if current_simulation == "MD":
+                    command = self.mdi_force.mdiListen("@ENERGY", self.context)
+                else:
+                    raise Exception("Cannot proceed to the @ENERGY node unless an MD simulation has been started")
+
+            elif command == "@UPDATE":
+                if current_simulation == "MD":
+                    self.step(1)
+                else:
+                    raise Exception("Cannot proceed to the @UPDATE node unless an MD simulation has been started")
+
+            elif command == "@FORCES":
+                if current_simulation == "MD":
+                    self.step(1)
+                else:
+                    raise Exception("Cannot proceed to the @FORCES node unless an MD simulation has been started")
+
+            elif command == "EXIT":
+                pass
+
+            else:
+                raise Exception("Unsupported MDI command: " + str(command))
+
+            print( "   Engine outer command: " + str(command) )

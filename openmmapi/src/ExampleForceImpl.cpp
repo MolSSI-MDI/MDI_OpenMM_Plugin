@@ -80,8 +80,8 @@ void ExampleForceImpl::updateContextState(OpenMM::ContextImpl& context, bool& fo
     this->server->listen("@UPDATE", context, kernel);
 }
 
-void ExampleForceImpl::mdiListen(string node, OpenMM::ContextImpl& context) {
-    this->server->listen(node, context, kernel);
+std::string ExampleForceImpl::mdiListen(string node, OpenMM::ContextImpl& context) {
+    return this->server->listen(node, context, kernel);
 }
 
 std::vector<std::string> ExampleForceImpl::getKernelNames() {
