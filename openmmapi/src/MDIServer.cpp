@@ -173,6 +173,10 @@ std::string MDIServer::getTargetNode() {
   return target;
 }
 
+std::string MDIServer::getPreviousNode() {
+  return this->previous_node;
+}
+
 std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
     printf("   Engine at node: %s %d\n",node.c_str(), this->is_active);
 
@@ -291,6 +295,8 @@ std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel)
 	strcpy( this->target_node, command );
       }
     }
+
+    this->previous_node = node;
 
     delete [] command;
 

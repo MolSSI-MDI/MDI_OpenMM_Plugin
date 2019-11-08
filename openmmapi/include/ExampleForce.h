@@ -115,6 +115,10 @@ public:
      */
     std::string getTargetNode(OpenMM::Context& context);
     /**
+     * Returns the server's previous node
+     */
+    std::string getPreviousNode(OpenMM::Context& context);
+    /**
      * Returns mdiOptions
      */
     std::string getMDIOptions() const {

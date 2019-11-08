@@ -86,6 +86,10 @@ std::string ExampleForce::getTargetNode(Context& context) {
     return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).getTargetNode();
 }
 
+std::string ExampleForce::getPreviousNode(Context& context) {
+    return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).getPreviousNode();
+}
+
 void ExampleForce::setActive(bool active, Context& context) {
     return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).setActive(active);
 }

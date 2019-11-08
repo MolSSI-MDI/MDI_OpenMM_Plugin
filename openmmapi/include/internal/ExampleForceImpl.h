@@ -65,6 +65,7 @@ public:
     void updateParametersInContext(OpenMM::ContextImpl& context);
     std::string mdiListen(std::string node, OpenMM::ContextImpl& context);
     std::string getTargetNode();
+    std::string getPreviousNode();
     void setActive(bool active);
 private:
     const ExampleForce& owner;

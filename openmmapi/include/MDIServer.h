@@ -73,6 +73,10 @@ public:
      */
     std::string getTargetNode();
     /**
+     * Get the previous node.
+     */
+    std::string getPreviousNode();
+    /**
      * Get the NonbondedForce.
      */
     const OpenMM::NonbondedForce* get_nonbonded_force(OpenMM::ContextImpl& context);
@@ -151,6 +155,7 @@ public:
 private:
     MDI_Comm mdi_comm;
     char *target_node;
+    std::string previous_node = "";
     bool is_active = false;
 };
 

@@ -86,6 +86,10 @@ std::string ExampleForceImpl::getTargetNode() {
     return this->server->getTargetNode();
 }
 
+std::string ExampleForceImpl::getPreviousNode() {
+    return this->server->getPreviousNode();
+}
+
 void ExampleForceImpl::setActive(bool active) {
     this->server->setActive(active);
 }

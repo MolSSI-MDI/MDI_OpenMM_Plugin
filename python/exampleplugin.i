@@ -61,6 +61,7 @@ public:
     void updateParametersInContext(OpenMM::Context& context);
     std::string mdiListen(std::string node, OpenMM::Context& context);
     std::string getTargetNode(OpenMM::Context& context);
+    std::string getPreviousNode(OpenMM::Context& context);
     void setActive(bool active, OpenMM::Context& context);
 
     /*
