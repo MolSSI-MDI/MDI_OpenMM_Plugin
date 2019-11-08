@@ -116,13 +116,15 @@ public:
     std::string getMDIOptions() const {
       return this->mdiOptions;
     }
+    /**
+     * Sets whether the MDI server is active
+     */
+    void setActive(bool active, OpenMM::Context& context);
 protected:
     OpenMM::ForceImpl* createImpl() const;
 private:
     class BondInfo;
     std::vector<BondInfo> bonds;
-    //MDI_Comm mdi_comm;
-    //MDIServer& server;
     std::string mdiOptions;
 };
 

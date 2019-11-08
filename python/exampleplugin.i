@@ -46,8 +46,6 @@ namespace ExamplePlugin {
 class MDIServer {
 public:
     MDIServer(std::string mdi_options);
-    void init(std::string mdi_options);
-    void run();
 };
 
 class ExampleForce : public OpenMM::Force {
@@ -62,6 +60,7 @@ public:
 
     void updateParametersInContext(OpenMM::Context& context);
     std::string mdiListen(std::string node, OpenMM::Context& context);
+    void setActive(bool active, OpenMM::Context& context);
 
     /*
      * The reference parameters to this function are output values.

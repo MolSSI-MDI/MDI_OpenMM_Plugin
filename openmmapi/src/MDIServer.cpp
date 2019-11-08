@@ -164,16 +164,21 @@ void MDIServer::init(string mdi_options) {
     target_node[0] = '\0';
 }
 
-void MDIServer::run() {
-  return;
+void MDIServer::setActive(bool active) {
+  this->is_active = active;
 }
 
 std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
-    printf("   Engine at node: %s\n",node.c_str());
+    printf("   Engine at node: %s %d\n",node.c_str(), this->is_active);
+
+    // Only enter server mode if the server is activated
+    if ( not this->is_active ) {
+      return "";
+    }
+
     const OpenMM::System& system = context.getSystem();
     int supported;
     int ierr;
-
     char *command = new char[MDI_COMMAND_LENGTH];
 
     // If there is a target node, check if this is the target node

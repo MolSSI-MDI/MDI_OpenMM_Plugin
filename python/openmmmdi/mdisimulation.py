@@ -29,7 +29,13 @@ class MDISimulation(mmapp.Simulation):
         #    #print("      ------------------- " + str(new_state.getKineticEnergy()))
         #    self.step(1)
 
+        #self.step(1)
         #new_state = self.context.getState(getEnergy = True)
+        #new_state = self.context.getState(getEnergy = True)
+        #new_state = self.context.getState(getEnergy = True)
+        #new_state = self.context.getState(getEnergy = True)
+
+        self.mdi_force.setActive(True, self.context)
 
         command = "@GLOBAL"
         current_simulation = ""

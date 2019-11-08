@@ -82,6 +82,10 @@ std::string ExampleForceImpl::mdiListen(string node, OpenMM::ContextImpl& contex
     return this->server->listen(node, context, kernel);
 }
 
+void ExampleForceImpl::setActive(bool active) {
+    this->server->setActive(active);
+}
+
 std::vector<std::string> ExampleForceImpl::getKernelNames() {
     std::vector<std::string> names;
     names.push_back(CalcExampleForceKernel::Name());

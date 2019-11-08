@@ -61,9 +61,9 @@ public:
      */
     void init(std::string mdi_options);
     /**
-     * Run the MDIServer.
+     * Set whether the MDIServer is currently active.
      */
-    void run();
+    void setActive(bool active);
     /**
      * Listen for commands from the external driver.
      */
@@ -144,16 +144,10 @@ public:
      * Respond to +FORCES.
      */
     void add_forces(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::vector<double>* forces_in = nullptr);
-    /**
-     * Additional responses needed:
-     * <@
-     * @INIT_MD
-     * @INIT_OPTG
-     * @GLOBAL
-     */
 private:
     MDI_Comm mdi_comm;
     char *target_node;
+    bool is_active = false;
 };
 
 

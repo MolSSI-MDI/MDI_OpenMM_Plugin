@@ -81,3 +81,7 @@ void ExampleForce::updateParametersInContext(Context& context) {
 std::string ExampleForce::mdiListen(std::string node, Context& context) {
     return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).mdiListen(node, getContextImpl(context));
 }
+
+void ExampleForce::setActive(bool active, Context& context) {
+    return dynamic_cast<ExampleForceImpl&>(getImplInContext(context)).setActive(active);
+}
