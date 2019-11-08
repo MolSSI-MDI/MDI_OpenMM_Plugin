@@ -64,7 +64,7 @@ void ExampleForceImpl::initialize(ContextImpl& context) {
 double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeForces, bool includeEnergy, int groups) {
     printf("   @FORCES %d %d\n", includeForces, includeEnergy);
     MDIServer& server = owner.getServer();
-    server.listen(context, kernel, "@FORCES");
+    server.listen("@FORCES", context, kernel);
 
     if ((groups&(1<<owner.getForceGroup())) != 0)
         return kernel.getAs<CalcExampleForceKernel>().execute(context, includeForces, includeEnergy);
@@ -74,7 +74,7 @@ double ExampleForceImpl::calcForcesAndEnergy(ContextImpl& context, bool includeF
 void ExampleForceImpl::updateContextState(OpenMM::ContextImpl& context, bool& forcesInvalid) {
     printf("   @UPDATE\n");
     MDIServer& server = owner.getServer();
-    server.listen(context, kernel, "@UPDATE");
+    server.listen("@UPDATE", context, kernel);
 }
 
 

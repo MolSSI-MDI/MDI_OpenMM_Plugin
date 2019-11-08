@@ -64,6 +64,7 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Node("@UPDATE");
     MDI_Register_Command("@UPDATE", "<COORDS");
     MDI_Register_Command("@UPDATE", ">COORDS");
+    MDI_Register_Command("@UPDATE", "EXIT");
     MDI_Register_Command("@UPDATE", "<VELOCITIES");
     MDI_Register_Command("@UPDATE", ">VELOCITIES");
     MDI_Register_Command("@UPDATE", "<FORCES");
@@ -76,13 +77,13 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@UPDATE", "<MASSES");
     MDI_Register_Command("@UPDATE", "@");
     MDI_Register_Command("@UPDATE", "@ENERGY");
-    MDI_Register_Command("@UPDATE", "@EXIT");
     MDI_Register_Command("@UPDATE", "@FORCES");
     MDI_Register_Command("@UPDATE", "@UPDATE");
 
     // Register the @FORCES node
     MDI_Register_Node("@FORCES");
     MDI_Register_Command("@FORCES", "<COORDS");
+    MDI_Register_Command("@FORCES", "EXIT");
     MDI_Register_Command("@FORCES", "<VELOCITIES");
     MDI_Register_Command("@FORCES", "<NATOMS");
     MDI_Register_Command("@FORCES", "<CHARGES");
@@ -92,20 +93,19 @@ void MDIServer::init(string mdi_options) {
     MDI_Register_Command("@FORCES", "+FORCES");
     MDI_Register_Command("@FORCES", "@");
     MDI_Register_Command("@FORCES", "@ENERGY");
-    MDI_Register_Command("@FORCES", "@EXIT");
     MDI_Register_Command("@FORCES", "@FORCES");
     MDI_Register_Command("@FORCES", "@UPDATE");
 
     // Register the @ENERGY node
     MDI_Register_Node("@ENERGY");
     MDI_Register_Command("@ENERGY", "<ENERGY");
+    MDI_Register_Command("@ENERGY", "EXIT");
     MDI_Register_Command("@ENERGY", "<KE");
     MDI_Register_Command("@ENERGY", "<KE_NUC");
     MDI_Register_Command("@ENERGY", "<PE");
     MDI_Register_Command("@ENERGY", "<PE_NUC");
     MDI_Register_Command("@ENERGY", "@");
     MDI_Register_Command("@ENERGY", "@ENERGY");
-    MDI_Register_Command("@ENERGY", "@EXIT");
     MDI_Register_Command("@ENERGY", "@FORCES");
     MDI_Register_Command("@ENERGY", "@UPDATE");
 
@@ -126,7 +126,8 @@ void MDIServer::run() {
   return;
 }
 
-void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
+void MDIServer::listen(string node, ContextImpl& context, Kernel& kernel) {
+  //void MDIServer::listen(ContextImpl& context, string node) {
     printf("   Engine in listen\n");
     const OpenMM::System& system = context.getSystem();
     int supported;
@@ -187,9 +188,11 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
       else if ( strcmp( command, "<FORCES" ) == 0 ) {
 	this->send_forces(context);
       }
+      /*
       else if ( strcmp( command, "+FORCES" ) == 0 ) {
 	this->add_forces(context, kernel);
       }
+      */
       else if ( strcmp( command, "<KE" ) == 0 ) {
 	this->send_ke(context);
       }
@@ -223,7 +226,7 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
       else if ( strcmp( command, "@ENERGY" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
-      else if ( strcmp( command, "@EXIT" ) == 0 ) {
+      else if ( strcmp( command, "EXIT" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
       else if ( strcmp( command, "@FORCES" ) == 0 ) {
@@ -301,7 +304,7 @@ void MDIServer::listen(ContextImpl& context, Kernel& kernel, string node) {
     for (int i = 0; i < 3*natoms; i++) {
       forces.push_back( 100.0 / conv );
     }
-    this->add_forces(context, kernel, &forces);
+    //this->add_forces(context, kernel, &forces);
 }
 
 

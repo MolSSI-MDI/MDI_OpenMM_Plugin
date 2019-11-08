@@ -67,7 +67,7 @@ public:
     /**
      * Listen for commands from the external driver.
      */
-    void listen(OpenMM::ContextImpl& context, OpenMM::Kernel& kernel, std::string node);
+    void listen(std::string node, OpenMM::ContextImpl& context, OpenMM::Kernel& kernel);
     /**
      * Get the NonbondedForce.
      */
