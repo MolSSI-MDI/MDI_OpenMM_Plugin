@@ -114,6 +114,9 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@UPDATE", "@FORCES");
     MDI_Register_Command("@UPDATE", "@GLOBAL");
     MDI_Register_Command("@UPDATE", "@UPDATE");
+    MDI_Register_Callback("@UPDATE", ">COORDS");
+    MDI_Register_Callback("@UPDATE", ">CELL");
+    MDI_Register_Callback("@UPDATE", ">VELOCITIES");
 
     // Register the @FORCES node
     MDI_Register_Node("@FORCES");
@@ -131,6 +134,7 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@FORCES", "@FORCES");
     MDI_Register_Command("@FORCES", "@GLOBAL");
     MDI_Register_Command("@FORCES", "@UPDATE");
+    MDI_Register_Callback("@FORCES", "+FORCES");
 
     // Register the @ENERGY node
     MDI_Register_Node("@ENERGY");
