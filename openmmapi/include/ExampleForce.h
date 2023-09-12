@@ -37,7 +37,6 @@
 #include <vector>
 #include "internal/windowsExportExample.h"
 #include "MDIServer.h"
-#include "MDI_Library/mdi.h"
 
 namespace ExamplePlugin {
 

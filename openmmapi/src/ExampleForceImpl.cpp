@@ -42,7 +42,6 @@
 #include <sstream>
 //////////
 #include "MDIServer.h"
-#include "MDI_Library/mdi.h"
 #include "openmm/NonbondedForce.h"
 //////////
 

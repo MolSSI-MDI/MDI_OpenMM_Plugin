@@ -40,7 +40,7 @@
 #include <vector>
 #include "internal/windowsExportExample.h"
 #include "openmm/NonbondedForce.h"
-#include "MDI_Library/mdi.h"
+#include "mdi.h"
 #include <cstddef>
 //#include "MDINode.h"
 

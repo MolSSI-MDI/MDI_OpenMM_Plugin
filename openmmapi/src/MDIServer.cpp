@@ -37,6 +37,7 @@
 #include "ExampleKernels.h"
 #include "openmm/internal/ContextImpl.h"
 #include <mpi.h>
+#include <string.h>
 
 using namespace ExamplePlugin;
 using namespace OpenMM;
