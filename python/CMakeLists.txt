@@ -31,9 +31,22 @@ add_custom_target(PythonInstall DEPENDS "${WRAP_FILE}")
 set(EXAMPLEPLUGIN_HEADER_DIR "${CMAKE_SOURCE_DIR}/openmmapi/include")
 set(EXAMPLEPLUGIN_LIBRARY_DIR "${CMAKE_BINARY_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+
+set(OPENMM_PYTHON_USER_INSTALL OFF CACHE BOOL
+    "Whether to install OpenMM Python binary module into the user site-packages directory")
+mark_as_advanced(OPENMM_PYTHON_USER_INSTALL)
+
+if(OPENMM_PYTHON_USER_INSTALL)
+    # Install binary module to user location
+add_custom_command(TARGET PythonInstall
+    COMMAND "${PYTHON_EXECUTABLE}" setup.py build
+    COMMAND "${PYTHON_EXECUTABLE}" setup.py install --user
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+else()
 add_custom_command(TARGET PythonInstall
     COMMAND "${PYTHON_EXECUTABLE}" setup.py build
     COMMAND "${PYTHON_EXECUTABLE}" setup.py install
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
-
+endif()
