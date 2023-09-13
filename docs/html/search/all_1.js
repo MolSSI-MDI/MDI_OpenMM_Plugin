@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['data',['data',['../structdynamic__array__struct.html#acdf8715c6be1adbb6ab128b47290df75',1,'dynamic_array_struct']]],
-  ['dynamic_5farray_5fstruct',['dynamic_array_struct',['../structdynamic__array__struct.html',1,'']]]
+  ['buf_1',['buf',['../structplugin__shared__state__struct.html#abd56c68d54f5ec9bb446a422a06d9c49',1,'plugin_shared_state_struct']]],
+  ['buf_5fallocated_2',['buf_allocated',['../structplugin__shared__state__struct.html#abc85e33b3ea2cd4e4829d0837444a05b',1,'plugin_shared_state_struct']]]
 ];

@@ -5,8 +5,17 @@
 The MDI Standard provides a straightforward, API-like method for enabling interoperability among computational molecular sciences codes.
 It uses a driver/engine model in which a driver code controls the high-level program flow of one or more engine codes.
 The driver exercises this control through the use of \ref command_list "commands" that are defined by the MDI Standard.
-Commands are available that correspond to a variety of tasks, such as "receive a new set of nuclear coordinates from me" (\ref send_coords), "run a self-consistent field calculation" (\ref scf_command) and "send me the forces on the nuclei" (\ref recv_forces).
+Commands are available that correspond to a variety of tasks, such as "receive a new set of nuclear coordinates from me" (\ref send_coords), "start an MD simulation" (\ref init_md) and "send me the forces on the nuclei" (\ref recv_forces).
 The MDI standard defines the \ref standard_units "units", data types, and formatting of any data communicated between codes in response to a command.
+
+
+
+
+\section standard_extension Extending the MDI Standard
+
+Although the MDI Standard has been designed to enable a wide range of potential applications, it is inevitable that some use cases will require functionality that is not yet supported by the standard.
+Typically, supporting such use cases will simply require addition of one or more new \ref command_list "commands" to the MDI Standard.
+Users who find themselves in need of a new MDI command are encouraged to create an <a href="https://github.com/MolSSI-MDI/MDI_Library/issues">issue</a> describing their needs or submit a <a href="https://github.com/MolSSI-MDI/MDI_Library/pulls">pull request</a> suggesting a solution.
 
 
 
@@ -22,27 +31,49 @@ Use of this function ensures self-consistency in unit conversions between codes,
 \section standard_nodes_sec Nodes
 
 One of the powerful features of the MDI Standard is that it permits drivers to take advantage of existing implementations of time integrators and geometry optimizers in MDI engines.
-In particular, the \ref md_init and \ref optg_init commands cause an engine to begin a molecular dynamics trajectory or a geometry optimization, respectively.
+In particular, the \ref init_md and \ref init_optg commands cause an engine to begin a molecular dynamics trajectory or a geometry optimization, respectively.
 Upon receiving one of these commands, an engine will perform the corresponding simulation without requiring further instruction from the driver, except that it will pause at certain "nodes" and listen for new commands.
 
 The MDI Standard defines several nodes.
 Their names and when they occur are as follows:
 
 \par
-<b> @GLOBAL </b> - Upon initially connecting to the driver. <br>
+<b> @DEFAULT </b> - Upon initially connecting to the driver. <br>
+<b> @INIT_MC </b> - Upon initializing a new Monte Carlo simulation. <br>
 <b> @INIT_MD </b> - Upon initializing a new molecular dynamics simulation. <br>
 <b> @INIT_OPTG </b> - Upon initializing a new geometry optimization. <br>
+
+Not all MDI engines are required to support each of these nodes, with the exception of the @DEFAULT node, which every MDI engine must support.
+Additional nodes may be defined by individual codes.
+Examples of possible code-specific nodes include:
+
+\par
 <b> @PRE-FORCES </b> - After calculating all contributions to the atomic forces, \b except those associated with a constraint algorithm like SHAKE or RATTLE. <br>
 <b> @FORCES </b> - After calculating all contributions to the atomic forces. <br>
 <b> @COORDS </b> - After updating the atomic coordinates.
 
-Several MDI commands are only relevant when an engine is paused at a node.
+Several MDI commands enable a driver to control the program flow of an engine through different nodes.
 The \ref send_node command instructs the engine to send the name of its node, while the \ref next_node command instructs the engine to proceed in its simulation until it reaches the next node.
 In addition, there are commands associated with each type of node (\ref pre-forces_node, \ref forces_node, \ref coords_node) which instruct the engine to proceed in its simulation until it reaches the next node of that particular type.
 
-A typical MD implementation might progress from a @PRE-FORCES node, to the @FORCES node, to the @COORDS node, and then repeat the cycle; however, this behavior is \b not guaranteed.
+A specific MD implementation might progress from a @PRE-FORCES node, to the @FORCES node, to the @COORDS node, and then repeat the cycle; however, this behavior is \b not guaranteed.
 Engines are permitted to pass through nodes in whatever order the implementation dictates.
 When writing drivers, it is a best practice to avoid assumptions about the ordering or frequency of nodes.
+
+The MDI Library provides several functions that allow codes to define and communicate information about which nodes are supported:
+
+  - MDI_Register_Node()
+  - MDI_Check_Node_Exists()
+  - MDI_Get_NNodes()
+  - MDI_Get_Node()
+
+Engines are not required to support every MDI command at every node.
+The MDI Library provides several functions that allow codes to define and communicate information about which commands are supported at specific nodes:
+
+  - MDI_Register_Command()
+  - MDI_Check_Command_Exists()
+  - MDI_Get_NCommands()
+  - MDI_Get_Command()
 
 
 
@@ -50,6 +81,12 @@ When writing drivers, it is a best practice to avoid assumptions about the order
 
 The following constants are defined by the MDI Standard and are accessible through the \ref library_page "MDI Library":
 
+  - \c MDI_MPI - Identifier for the MPI communication method
+  - \c MDI_TCP - Identifier for the TCP communication method
+  - \c MDI_LINK - Identifier for the LINK communication method
+  - \c MDI_TEST - Identifier for the TEST communication method
+  - \c MDI_DRIVER - Identifier for the DRIVER role
+  - \c MDI_ENGINE - Identifier for the ENGINE role
   - \c MDI_INT - Data type identifier for integers
   - \c MDI_DOUBLE - Data type identifier for double precision floats
   - \c MDI_CHAR - Data type identifier for characters
@@ -71,7 +108,7 @@ The following is a list of commands that are officially part of the MDI standard
 \subsection next_node @
 
 The engine proceeds to the next node (see \ref standard_nodes_sec).
-This command is not valid at the \c @GLOBAL node.
+This command is typically not supported at the \c @DEFAULT node.
 
 
 
@@ -97,33 +134,49 @@ See the \ref recv_density command for more details.
 
 
 
-\subsection set_cell >CELL
+\subsection send_cell >CELL
 
 The driver sends a set of cell vectors to the engine, which resizes its simulation cell to the dimensions specified by the cell vectors.
-The driver also sends the displacement vector of the origin of the simulation cell.
 
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
-<b> Quantity: </b> 12 <br>
+<b> Quantity: </b> 9 <br>
 <b> Format: </b> The first 3 values correspond to the x, y, and z values, respectively, of the first cell vector.
 The next 3 values correspond to the x, y, and z values, respectively, of the second cell vector.
-The next 3 values correspond to the x, y, and z values, respectively, of the third cell vector.
-The next 3 values correspond to the x, y, and z values, respectively, of the simulation cell displacement vector. <br>
+The next 3 values correspond to the x, y, and z values, respectively, of the third cell vector. <br>
 
 
 
 \subsection recv_cell <CELL
 
-The engine sends a set of cell vectors to the driver, in the same format as specified for the \c >CELL command.
-The engine also sends the displacement vector of the origin of the simulation cell.
+The engine sends a set of cell vectors to the driver.
 
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
-<b> Quantity: </b> 12 <br>
+<b> Quantity: </b> 9 <br>
 <b> Format: </b> The first 3 values correspond to the x, y, and z values, respectively, of the first cell vector.
 The next 3 values correspond to the x, y, and z values, respectively, of the second cell vector.
-The next 3 values correspond to the x, y, and z values, respectively, of the third cell vector.
-The next 3 values correspond to the x, y, and z values, respectively, of the simulation cell displacement vector. <br>
+The next 3 values correspond to the x, y, and z values, respectively, of the third cell vector. <br>
+
+
+\subsection send_cell_displ >CELL_DISPL
+
+The driver sends a displacement vector to the engine, which adjusts the origin of its simulation cell to the value of the displacement vector.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 3 <br>
+<b> Format: </b> The 3 values correspond to the x, y, and z values, respectively, of the simulation cell displacement vector. <br>
+
+
+\subsection recv_cell_displ <CELL_DISPL
+
+The engine sends the displacement vector of the origin of its simulation cell to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 3 <br>
+<b> Format: </b> The 3 values correspond to the x, y, and z values, respectively, of the simulation cell displacement vector. <br>
 
 
 \subsection send_charges >CHARGES
@@ -160,29 +213,14 @@ For an alternative command that is more appropriate for plane wave quantum mecha
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
 <b> Quantity: </b> <c> 3 * NLATTICE </c> <br>
-<b> Format: </b> Sequentially ascending order of point charge index, with the coordinates for each individual point charge being provided in xyz order
-
-
-
-\subsection recv_commands <COMMANDS
-
-The engine sends a string listing all commands that it supports to the driver.
-All engines are required to support this command.
-Typically, a driver should send this command to each of the engines immediately after establishing a connection with them, and exit with an appropriate error message in the event that any of the engines do not support a command that is required by the driver.
-See also the \c <NCOMMANDS command.
-
-\par
-<b> Data Type: </b> \c MDI_CHAR <br>
-<b> Quantity: </b> \c NCOMMANDS * \c MDI_COMMAND_LENGTH <br>
-<b> Format: </b> A single string sequentially listing all of the commands, with the first command corresponding to the first \c MDI_COMMAND_LENGTH characters, the second command corresponding to the next \c MDI_COMMAND_LENGTH characters, etc.
-Commands having fewer than \c MDI_COMMAND_LENGTH characters are padded with blank spaces (" ").
+<b> Format: </b> Sequentially ascending order of lattice charge index, with the coordinates for each individual lattice charge being provided in xyz order
 
 
 
 \subsection coords_node @COORDS
 
 The engine proceeds to the next \c @COORDS node (see \ref standard_nodes_sec).
-This command is not valid at the \c @GLOBAL node.
+This command is not valid at the \c @DEFAULT node.
 
 
 
@@ -220,6 +258,12 @@ It is also necessary that the driver send the values of the grid points via the 
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
 <b> Quantity: </b> <c> 3 * NPOTENTIAL </c>
+
+
+
+\subsection default_node @DEFAULT
+
+If not already at the \c @DEFAULT node, the engine exists whatever simulation (i.e. MD, OPTG, etc.) it is performing (possibly after completing an unfinished time step or geometry optimization step) and returns to the \c @DEFAULT node.
 
 
 
@@ -275,7 +319,18 @@ This command is typically only appropriate for quantum mechanics engines.
 
 \subsection recv_elements <ELEMENTS
 
-The engine sends the atomic number of each element in its system to the driver.
+The engine sends the atomic number of each atom in its system to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_INT <br>
+<b> Quantity: </b> \c NATOMS <br>
+<b> Format: </b> Sequentially ascending order of atomic index
+
+
+
+\subsection send_elements >ELEMENTS
+
+The driver sends a set of atomic numbers to the engine, which replaces the atomic number of each atom in its system with the values sent by the driver.
 
 \par
 <b> Data Type: </b> \c MDI_INT <br>
@@ -286,10 +341,10 @@ The engine sends the atomic number of each element in its system to the driver.
 
 \subsection recv_energy <ENERGY
 
-If the engine is at the \c @GLOBAL node, it calculates and sends its energy to the driver, not including nuclear kinetic energy.
+If the engine is at the \c @DEFAULT node, it calculates and sends its total energy to the driver.
 If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
 
-If the engine is not at the \c @GLOBAL node, it sends its most recently calculated energy to the driver, not including nuclear kinetic energy.
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated total energy to the driver.
 
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
@@ -306,7 +361,7 @@ The engine terminates and can no longer be sent commands.
 \subsection forces_node @FORCES
 
 The engine proceeds to the next \c @FORCES node (see \ref standard_nodes_sec).
-This command is not valid at the \c @GLOBAL node.
+This command is not valid at the \c @DEFAULT node.
 
 
 
@@ -321,7 +376,7 @@ The driver sends a set of atomic forces to the engine, which replaces its intern
 
 
 
-\subsection send_add_forces +FORCES
+\subsection send_add_forces >+FORCES
 
 The driver sends a set of atomic forces to the engine, which adds the forces sent by the driver to its internal forces.
 
@@ -334,11 +389,11 @@ The driver sends a set of atomic forces to the engine, which adds the forces sen
 
 \subsection recv_forces <FORCES
 
-If the engine is at the \c @GLOBAL node, it calculates and sends its atomic forces to the driver.
+If the engine is at the \c @DEFAULT node, it calculates and sends its atomic forces to the driver.
 These forces include all force contributions, including the force contributions associated with any constraint algorithm (e.g. SHAKE, RATTLE, etc.).
 If the engine has previously calculated the atomic forces of the system, and no intervening commands from the driver could have changed the atomic forces, the engine is permitted to send the previously calculated atomic forces instead of recalculating them.
 
-If the engine is not at the \c @GLOBAL node, it sends its most recently calculated atomic forces to the driver.
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated atomic forces to the driver.
 Depending on the engine's current node, these forces may not include all contributions to the atomic forces.
 See the descriptions of the different nodes for more details.
 
@@ -349,9 +404,9 @@ See the descriptions of the different nodes for more details.
 
 
 
-\subsection global_node @GLOBAL
+\subsection init_mc @INIT_MC
 
-If not already at the \c @GLOBAL node, the engine exists whatever simulation (i.e. MD, OPTG, etc.) it is performing (possibly after completing an unfinished time step or geometry optimization step) and returns to the \c @GLOBAL node.
+The engine performs any initialization operations that are necessary before a Monte Carlo simulation can be performed, proceeding to the @INIT_MC node.
 
 
 
@@ -373,6 +428,60 @@ The engine performs any initialization operations that are necessary before a ge
 
 
 
+\subsection recv_ke <KE
+
+If the engine is at the \c @DEFAULT node, it calculates and sends its total kinetic energy to the driver.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated total kinetic energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
+\subsection recv_ke_elec <KE_ELEC
+
+If the engine is at the \c @DEFAULT node, it calculates and sends the total kinetic energy of all electrons in its system to the driver.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated electronic kinetic energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
+\subsection recv_ke_nuc <KE_NUC
+
+If the engine is at the \c @DEFAULT node, it calculates and sends the total kinetic energy of all nuclei in its system to the driver.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated nuclear kinetic energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
+\subsection send_labels <LABELS
+
+The engine sends a label for each atom in its system.
+"Labels" are intended primarily for the purpose of providing a human-readable identifier for each of the atoms, and do not have a standardized physical meaning.
+It is recommended that the labels correspond to the element of each atom (i.e., "H", "He", "Li", etc.), a name associated with atoms of a particular type (i.e., "Carboxyl_Hydrogen", "Methyl_Hydrogen"), or a similarly descriptive term.
+The atom labels may correspond to a number identifier (i.e., "1", "2", "3", etc.) in cases where more descriptive labels are not practical, but note that such labels must be represented using the \c MDI_CHAR data type, as indicated below.
+It is required that atoms having different physical properties (i.e., different force field terms in a molecular mechanics simulation or different nuclear charges in a quantum chemistry simulation) have different labels.
+
+\par
+<b> Data Type: </b> \c MDI_CHAR <br>
+<b> Quantity: </b> \c MDI_LABEL_LENGTH * \c NATOMS <br>
+<b> Format: </b> An array of characters corresponding to the label of each atom in ascending order of atomic index, with each label consisting of \c MDI_LABEL_LENGTH characters and being padded with spaces (" ") where necessary <br>
+
+
+
 \subsection send_lattice >LATTICE
 
 This command, along with the \c >NLATTICE and \c >CLATTICE commands, allows the driver to assign a lattice of point charges to an engine, which incorporates the effects of these charges in all further calculations.
@@ -385,7 +494,26 @@ For an alternative command that is more appropriate for plane wave quantum mecha
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
 <b> Quantity: </b> <c> NLATTICE </c> <br>
-<b> Format: </b> Sequentially ascending order of point charge index
+<b> Format: </b> Sequentially ascending order of lattice charge index
+
+
+
+\subsection recv_lattice_forces <LATTICE_FORCES
+
+If the engine is at the \c @DEFAULT node, it calculates and sends the forces on any lattice charges (which must have previously assigned with the \c >LATTICE command) to the driver.
+Prior to sending this command, the driver must have set the number, coordinates, and magnitudes of the lattice charges using the \c >NLATTICE, \c >CLATTICE, and \c >LATTICE commands.
+These forces must include only electrostatic interactions between the lattice charges and the atomic nuclei, and between the lattice charges and any electrons.
+They must not include electrostatic interactions between the lattice charges and other lattice charges.
+If the engine has previously calculated these forces, and no intervening commands from the driver could have changed the forces, the engine is permitted to send the previously calculated forces instead of recalculating them.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated lattice forces to the driver.
+
+This command is primarily intended for use with gas-phase quantum mechanics codes.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> <c> 3 * NLATTICE </c> <br>
+<b> Format: </b> Sequentially ascending order of lattice charge index, with the forces for each individual lattice charge being provided in xyz order
 
 
 
@@ -397,6 +525,35 @@ The engine sends the driver the mass of each of the atoms.
 <b> Data Type: </b> \c MDI_DOUBLE <br>
 <b> Quantity: </b> <c> <NATOMS </c> <br>
 <b> Format: </b> Sequentially ascending order of atomic index
+
+
+
+
+\subsection send_Monkhorst_Pack >MONKHORST-PACK_NPOINTS
+
+This command is typically expected for use with plane wave DFT engines.
+The driver sends the engine the number of k-points to generate on a Monkhorst-Pack grid.
+The engine then uses the k-points generated on this Monkhorst-Pack grid for all further simulations.
+
+\par
+<b> Data Type: </b> \c MDI_INT <br>
+<b> Quantity: </b> <c> 3 </c> <br>
+<b> Format: </b> The number of k-points to generate along each vector of the Brillouin zone, in ascending order of vector.
+
+
+
+
+\subsection send_Monkhorst_Pack_shift >MONKHORST-PACK_SHIFT
+
+This command is typically expected for use with plane wave DFT engines.
+The driver sends the engine a set of values that indicate the extent to which a set of k-points on a Monkhorst-Pack grid should be displaced relative to the original (non-displaced) Monkhorst-Pack grid.
+The engine then uses the shifted k-points for all further simulations.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> <c> 3 </c> <br>
+<b> Format: </b> The fraction of a grid step by which the k-points should be displaced, in ascending order of vector.  A value of 0.0 indicates no displacement along the corresponding vector, while a value of 0.5 indicates a displacement of half a grid step in along the corresponding vector.  Note that some engines can only support values of 0.0 or 0.5.
+
 
 
 
@@ -416,17 +573,6 @@ After initializing MDI and accepting communicators to the engines, the driver ca
 \subsection recv_natoms <NATOMS
 
 The engine sends the driver the number of atoms in the engine's system.
-
-\par
-<b> Data Type: </b> \c MDI_INT <br>
-<b> Quantity: </b> 1
-
-
-
-\subsection recv_ncommands <NCOMMANDS
-
-The engine sends the driver the number of commands the engine supports.
-See also the \c <COMMANDS command.
 
 \par
 <b> Data Type: </b> \c MDI_INT <br>
@@ -487,10 +633,77 @@ It is also necessary that the driver send the Cartesian coordinates of the grid 
 
 
 
+\subsection recv_pe <PE
+
+If the engine is at the \c @DEFAULT node, it calculates and sends its total potential energy to the driver.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated total potential energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
+\subsection recv_pe_elec <PE_ELEC
+
+If the engine is at the \c @DEFAULT node, it calculates and sends its electronic potential energy to the driver.
+The electronic potential energy is defined as including all interactions between the electrons and any other particles or fields in the system.
+It also includes the interactions between the electrons and themselves.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated electronic potential energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
+\subsection recv_pe_nuc <PE_NUC
+
+If the engine is at the \c @DEFAULT node, it calculates and sends its nuclear potential energy to the driver.
+The nuclear potential energy is defined as including all interactions between the nuclei and any other particles or fields in the system, excluding any electrons.
+It also includes the interactions between the nuclei and themselves.
+If the engine has previously calculated the energy of the system, and no intervening commands from the driver could have changed the energy, the engine is permitted to send the previously calculated energy instead of recalculating it.
+
+If the engine is not at the \c @DEFAULT node, it sends its most recently calculated electronic potential energy to the driver.
+
+\par
+<b> Data Type: </b> \c MDI_DOUBLE <br>
+<b> Quantity: </b> 1
+
+
+
 \subsection pre-forces_node @PRE-FORCES
 
 The engine proceeds to the next <c> @PRE-FORCES </c> node (see \ref standard_nodes_sec).
-This command is not valid at the \c @GLOBAL node.
+This command is not valid at the \c @DEFAULT node.
+
+
+
+\subsection send_spin_polarization <SPIN_POLARIZATION
+
+The engine sends a value that indicates the manner in which it is currently simulating spin polarization.
+This command is typically intended for use with plane wave DFT engines.
+
+\par
+<b> Data Type: </b> \c MDI_INT <br>
+<b> Quantity: </b> 1 <br>
+<b> Format: </b> A value of 0 indicates that simulations will be performed in a non-spin-polarized manner.  A value of 1 indicates that simulations will be performed in a spin-polarized manner, within the local spin density approximation (LSDA).  A value of 2 indicates that simulations will be performed in a spin-polarized, noncollinear manner.
+
+
+
+\subsection recv_spin_polarization >SPIN_POLARIZATION
+
+The driver sends a value that indicates the manner in which spin polarization should be simulated by the engine.
+This command is typically intended for use with plane wave DFT engines.
+
+\par
+<b> Data Type: </b> \c MDI_INT <br>
+<b> Quantity: </b> 1 <br>
+<b> Format: </b> A value of 0 indicates that simulations should be performed in a non-spin-polarized manner.  A value of 1 indicates that simulations should be performed in a spin-polarized manner, within the local spin density approximation (LSDA).  A value of 2 indicates that simulations should be performed in a spin-polarized, noncollinear manner.
 
 
 
@@ -567,7 +780,6 @@ The engine sends the version number of the MDI Library to which it is linked to 
 \par
 <b> Data Type: </b> \c MDI_DOUBLE <br>
 <b> Quantity: </b> <c> 1 </c> <br>
-
 
 
 

@@ -4,79 +4,78 @@ import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 import ctypes
-from .mdi_mpi4py import MPI4PYManager
+import sys
+import importlib
 
 # attempt to import numpy
 try:
     import numpy as np
-    use_numpy = True
+    found_numpy = True
 except ImportError:
-    use_numpy = False
+    found_numpy = False
 
-# attempt to import mpi4py
-try:
-    from mpi4py import MPI
-    use_mpi4py = True
-except ImportError:
-    use_mpi4py = False
+use_mpi4py = False
+MPI = None
 
 # get the path to the MDI Library
-try: # Unix
-    mdi_name_file = open(dir_path + "/mdi_name","r")
-    mdi_name = mdi_name_file.read()
-    mdi_path = dir_path + "/" + mdi_name
-except IOError: # Windows
-    mdi_name_file = open(dir_path + "\\mdi_name","r")
-    mdi_name = mdi_name_file.read()
-    mdi_path = dir_path + "\\" + mdi_name
+mdi_name_path = os.path.join( dir_path, "mdi_name" )
+mdi_name_file = open( mdi_name_path, "r" )
+mdi_name = mdi_name_file.read()
+mdi_path = os.path.join( dir_path, mdi_name )
+mdi_name_file.close()
 
 # load the MDI Library
 try:
-    mdi = ctypes.CDLL(mdi_path)
+    mdi = ctypes.CDLL(mdi_path, ctypes.RTLD_GLOBAL)
     MDI_COMMAND_LENGTH = ctypes.c_int.in_dll(mdi, "MDI_COMMAND_LENGTH").value
-except (ValueError, AttributeError):
-    mdi = ctypes.WinDLL(mdi_path)
+except (ValueError, AttributeError, OSError) as e:
+    mdi = ctypes.WinDLL(mdi_path, ctypes.RTLD_GLOBAL)
     MDI_COMMAND_LENGTH = ctypes.c_int.in_dll(mdi, "MDI_COMMAND_LENGTH").value
 
 # MDI Variables
 MDI_COMMAND_LENGTH = ctypes.c_int.in_dll(mdi, "MDI_COMMAND_LENGTH").value
 MDI_NAME_LENGTH = ctypes.c_int.in_dll(mdi, "MDI_NAME_LENGTH").value
-MDI_NULL_COMM = ctypes.c_int.in_dll(mdi, "MDI_NULL_COMM").value
-MDI_INT = ctypes.c_int.in_dll(mdi, "MDI_INT").value
-MDI_DOUBLE = ctypes.c_int.in_dll(mdi, "MDI_DOUBLE").value
-MDI_CHAR = ctypes.c_int.in_dll(mdi, "MDI_CHAR").value
-MDI_INT_NUMPY = ctypes.c_int.in_dll(mdi, "MDI_INT_NUMPY").value
-MDI_DOUBLE_NUMPY = ctypes.c_int.in_dll(mdi, "MDI_DOUBLE_NUMPY").value
+MDI_LABEL_LENGTH = ctypes.c_int.in_dll(mdi, "MDI_LABEL_LENGTH").value
+MDI_COMM_NULL = ctypes.c_int.in_dll(mdi, "MDI_COMM_NULL").value
 MDI_TCP = ctypes.c_int.in_dll(mdi, "MDI_TCP").value
 MDI_MPI = ctypes.c_int.in_dll(mdi, "MDI_MPI").value
-MDI_VERSION = ctypes.c_double.in_dll(mdi, "MDI_VERSION").value
+MDI_LINK = ctypes.c_int.in_dll(mdi, "MDI_LINK").value
+MDI_PLUGIN = ctypes.c_int.in_dll(mdi, "MDI_PLUGIN").value
+MDI_TEST = ctypes.c_int.in_dll(mdi, "MDI_TEST").value
+MDI_DRIVER = ctypes.c_int.in_dll(mdi, "MDI_DRIVER").value
+MDI_ENGINE = ctypes.c_int.in_dll(mdi, "MDI_ENGINE").value
+MDI_MAJOR_VERSION = ctypes.c_int.in_dll(mdi, "MDI_MAJOR_VERSION").value
+MDI_MINOR_VERSION = ctypes.c_int.in_dll(mdi, "MDI_MINOR_VERSION").value
+MDI_PATCH_VERSION = ctypes.c_int.in_dll(mdi, "MDI_PATCH_VERSION").value
 
-# Unit conversions
-MDI_METER_TO_BOHR = ctypes.c_double.in_dll(mdi, "MDI_METER_TO_BOHR").value
-MDI_ANGSTROM_TO_BOHR = ctypes.c_double.in_dll(mdi, "MDI_ANGSTROM_TO_BOHR").value
-MDI_SECOND_TO_AUT = ctypes.c_double.in_dll(mdi, "MDI_SECOND_TO_AUT").value
-MDI_PICOSECOND_TO_AUT = ctypes.c_double.in_dll(mdi, "MDI_PICOSECOND_TO_AUT").value
-MDI_NEWTON_TO_AUF = ctypes.c_double.in_dll(mdi, "MDI_NEWTON_TO_AUF").value
-MDI_JOULE_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_JOULE_TO_HARTREE").value
-MDI_KJ_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_KJ_TO_HARTREE").value
-MDI_KJPERMOL_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_KJPERMOL_TO_HARTREE").value
-MDI_KCALPERMOL_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_KCALPERMOL_TO_HARTREE").value
-MDI_EV_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_EV_TO_HARTREE").value
-MDI_RYDBERG_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_RYDBERG_TO_HARTREE").value
-MDI_KELVIN_TO_HARTREE = ctypes.c_double.in_dll(mdi, "MDI_KELVIN_TO_HARTREE").value
+# MDI Datatypes
+MDI_INT = ctypes.c_int.in_dll(mdi, "MDI_INT").value
+MDI_INT8_T = ctypes.c_int.in_dll(mdi, "MDI_INT8_T").value
+MDI_INT16_T = ctypes.c_int.in_dll(mdi, "MDI_INT16_T").value
+MDI_INT32_T = ctypes.c_int.in_dll(mdi, "MDI_INT32_T").value
+MDI_INT64_T = ctypes.c_int.in_dll(mdi, "MDI_INT64_T").value
+MDI_UINT8_T = ctypes.c_int.in_dll(mdi, "MDI_UINT8_T").value
+MDI_UINT16_T = ctypes.c_int.in_dll(mdi, "MDI_UINT16_T").value
+MDI_UINT32_T = ctypes.c_int.in_dll(mdi, "MDI_UINT32_T").value
+MDI_UINT64_T = ctypes.c_int.in_dll(mdi, "MDI_UINT64_T").value
+MDI_DOUBLE = ctypes.c_int.in_dll(mdi, "MDI_DOUBLE").value
+MDI_CHAR = ctypes.c_int.in_dll(mdi, "MDI_CHAR").value
+MDI_FLOAT = ctypes.c_int.in_dll(mdi, "MDI_FLOAT").value
+MDI_BYTE = ctypes.c_int.in_dll(mdi, "MDI_BYTE").value
 
+world_comm = None
 
 intra_code_comm = None
 
-mdi_manager = None
+# dictionary of mpi4py communicators
+mpi4py_comms = {}
 
-# MDI_Get_MPI_Code_Rank
-mdi.MDI_Get_MPI_Code_Rank.argtypes = []
-mdi.MDI_Get_MPI_Code_Rank.restype = ctypes.c_int
+# dictionary of function callbacks
+execute_command_dict = {}
 
-# MDI_Set_MPI_Intra_Rank
-mdi.MDI_Set_MPI_Intra_Rank.argtypes = [ctypes.c_int]
-mdi.MDI_Set_MPI_Intra_Rank.restype = None
+# function callback for the driver
+# only used when the driver is running a plugin
+driver_node_callback = None
 
 # set_world_size
 mdi.MDI_Set_World_Size.argtypes = [ctypes.c_int]
@@ -86,232 +85,764 @@ mdi.MDI_Set_World_Size.restype = None
 mdi.MDI_Set_World_Rank.argtypes = [ctypes.c_int]
 mdi.MDI_Set_World_Rank.restype = None
 
+# MDI_Get_Current_Code
+mdi.MDI_Get_Current_Code.argtypes = []
+mdi.MDI_Get_Current_Code.restype = ctypes.c_int
+def MDI_Get_Current_Code():
+    return mdi.MDI_Get_Current_Code()
+
+# delete all Python state associated with the current code
+def delete_code_state(mdi_comm):
+    current_code = MDI_Get_Current_Code()
+    if current_code in execute_command_dict.keys():
+        del execute_command_dict[current_code]
+
+    # if there is an mpi4py communicator associated with this mdi_comm, delete it
+    if mdi_comm in mpi4py_comms:
+        del mpi4py_comms[mdi_comm]
+
+def get_mpi_comm_from_flag(comm_flag):
+    global world_comm
+    global intra_code_comm
+
+    # get the correct communicator, based on the comm_flag
+    comm = None
+    if comm_flag == 0: # use world_comm
+        comm = world_comm
+    elif comm_flag == 1: # use the code intra_comm
+        comm = intra_code_comm
+    else:
+        raise Exception("MDI Error: Unknown comm flag in mpi4py callback")
+    return comm
+
+def c_ptr_to_py_str(in_ptr, length): 
+    result = ctypes.cast(in_ptr, ctypes.POINTER(ctypes.c_char*length)).contents
+    presult = ctypes.cast(result, ctypes.c_char_p).value
+    presult = presult.decode('utf-8')
+    return presult
+
+def mpi4py_get_np_array(buf, count, datatype, mdi_comm):
+    global mpi4py_comms
+
+    # determine the data type
+    if datatype == MDI_INT:
+        mpi_type = MPI.INT
+        datasize = ctypes.sizeof( ctypes.c_int )
+    elif datatype == MDI_INT8_T:
+        mpi_type = MPI.INT8_T
+        datasize = ctypes.sizeof( ctypes.c_int8 )
+    elif datatype == MDI_INT16_T:
+        mpi_type = MPI.INT16_T
+        datasize = ctypes.sizeof( ctypes.c_int16 )
+    elif datatype == MDI_INT32_T:
+        mpi_type = MPI.INT32_T
+        datasize = ctypes.sizeof( ctypes.c_int32 )
+    elif datatype == MDI_INT64_T:
+        mpi_type = MPI.INT64_T
+        datasize = ctypes.sizeof( ctypes.c_int64 )
+    elif datatype == MDI_UINT8_T:
+        mpi_type = MPI.UINT8_T
+        datasize = ctypes.sizeof( ctypes.c_uint8 )
+    elif datatype == MDI_UINT16_T:
+        mpi_type = MPI.UINT16_T
+        datasize = ctypes.sizeof( ctypes.c_uint16 )
+    elif datatype == MDI_UINT32_T:
+        mpi_type = MPI.UINT32_T
+        datasize = ctypes.sizeof( ctypes.c_uint32 )
+    elif datatype == MDI_UINT64_T:
+        mpi_type = MPI.UINT64_T
+        datasize = ctypes.sizeof( ctypes.c_uint64 )
+    elif datatype == MDI_DOUBLE:
+        mpi_type = MPI.DOUBLE
+        datasize = ctypes.sizeof( ctypes.c_double )
+    elif datatype == MDI_CHAR:
+        mpi_type = MPI.CHAR
+        datasize = ctypes.sizeof( ctypes.c_char )
+    elif datatype == MDI_FLOAT:
+        mpi_type = MPI.FLOAT
+        datasize = ctypes.sizeof( ctypes.c_float )
+    elif datatype == MDI_BYTE:
+        mpi_type = MPI.BYTE
+        datasize = ctypes.sizeof( ctypes.c_char )
+    else:
+        raise Exception("MDI Error: MDI type not recognized")
+
+    # get a numpy representation of the data
+    nparray = np.ctypeslib.as_array(buf, shape=tuple([ count * datasize ]))
+
+    # get the correct communicator for this array
+    comm = mpi4py_comms[mdi_comm]
+
+    return comm, (nparray, mpi_type)
+
+
+##################################################
+# MPI4Py Recv Callback                           #
+##################################################
+
+# define the type of the callback function
+mpi4py_recv_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.POINTER(ctypes.c_byte), # buf (ctypes.c_void_p?)
+                                         ctypes.c_int, # count
+                                         ctypes.c_int, # datatype
+                                         ctypes.c_int, # source
+                                         ctypes.c_int) # mdi_comm
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Recv_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Recv_Callback.argtypes = [mpi4py_recv_func_type]
+
+# define the python callback function
+def mpi4py_recv_callback(buf, count, datatype, source, mdi_comm):
+    try:
+
+        comm, recv_buf = mpi4py_get_np_array(buf, count, datatype, mdi_comm)
+        comm.Recv(recv_buf, source=source)
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_recv_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_recv_callback_c = mpi4py_recv_func_type( mpi4py_recv_callback )
+def set_mpi4py_recv_callback():
+    global mpi4py_recv_callback_c
+    mdi.MDI_Set_Mpi4py_Recv_Callback( mpi4py_recv_callback_c )
+
+##################################################
+# MPI4Py Send Callback                           #
+##################################################
+
+# define the type of the callback function
+mpi4py_send_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.POINTER(ctypes.c_byte), # buf (ctypes.c_void_p?)
+                                         ctypes.c_int, # count
+                                         ctypes.c_int, # datatype
+                                         ctypes.c_int, # destination
+                                         ctypes.c_int) # mdi_comm
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Send_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Send_Callback.argtypes = [mpi4py_send_func_type]
+
+# define the python callback function
+def mpi4py_send_callback(buf, count, datatype, destination, mdi_comm):
+    try:
+
+        comm, send_buf = mpi4py_get_np_array(buf, count, datatype, mdi_comm)
+        comm.Send(send_buf, dest=destination)
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_send_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_send_callback_c = mpi4py_send_func_type( mpi4py_send_callback )
+def set_mpi4py_send_callback():
+    global mpi4py_send_callback_c
+    mdi.MDI_Set_Mpi4py_Send_Callback( mpi4py_send_callback_c )
+
+##################################################
+# MPI4Py Size Callback                           #
+##################################################
+
+# define the type of the callback function
+mpi4py_size_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.c_int) # comm_flag
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Size_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Size_Callback.argtypes = [mpi4py_size_func_type]
+
+# define the python callback function
+def mpi4py_size_callback(comm_flag):
+    try:
+
+        comm = get_mpi_comm_from_flag( comm_flag )
+        return comm.Get_size()
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_size_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_size_callback_c = mpi4py_size_func_type( mpi4py_size_callback )
+def set_mpi4py_size_callback():
+    global mpi4py_size_callback_c
+    mdi.MDI_Set_Mpi4py_Size_Callback( mpi4py_size_callback_c )
+
+##################################################
+# MPI4Py Rank Callback                           #
+##################################################
+
+# define the type of the callback function
+mpi4py_rank_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.c_int) # comm_flag
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Rank_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Rank_Callback.argtypes = [mpi4py_rank_func_type]
+
+# define the python callback function
+def mpi4py_rank_callback(comm_flag):
+    try:
+
+        comm = get_mpi_comm_from_flag( comm_flag )
+        return comm.Get_rank()
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_rank_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_rank_callback_c = mpi4py_rank_func_type( mpi4py_rank_callback )
+def set_mpi4py_rank_callback():
+    global mpi4py_rank_callback_c
+    mdi.MDI_Set_Mpi4py_Rank_Callback( mpi4py_rank_callback_c )
+
+
+
+##################################################
+# MPI4Py Allgather Callback                   #
+##################################################
+
+# define the type of the callback function
+mpi4py_allgather_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.POINTER(ctypes.c_int), # sendbuf
+                                         ctypes.POINTER(ctypes.c_int)) # recvbuf
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Allgather_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Allgather_Callback.argtypes = [mpi4py_allgather_func_type]
+
+# define the python callback function
+def mpi4py_allgather_callback(buf, names):
+    try:
+
+        global world_comm
+        world_size = world_comm.Get_size()
+
+        # Create numpy arrays from the C pointers
+        buf_shape = tuple( [5] )
+        buf_np = np.ctypeslib.as_array(buf, shape=buf_shape)
+        names_shape = tuple( [5 * world_size] )
+        names_np = np.ctypeslib.as_array(names, shape=names_shape)
+
+        # Gather the names
+        world_comm.Allgather([buf_np, MPI.INT], [names_np, MPI.INT])
+
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_allgather_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_allgather_callback_c = mpi4py_allgather_func_type( mpi4py_allgather_callback )
+def set_mpi4py_allgather_callback():
+    global mpi4py_allgather_callback_c
+    mdi.MDI_Set_Mpi4py_Allgather_Callback( mpi4py_allgather_callback_c )
+
+
+
+##################################################
+# MPI4Py Gather Names Callback                   #
+##################################################
+
+# define the type of the callback function
+mpi4py_gather_names_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.POINTER(ctypes.c_char), # buf
+                                         ctypes.POINTER(ctypes.c_char), # names
+                                         ctypes.POINTER(ctypes.c_int),  # name_lengths
+                                         ctypes.POINTER(ctypes.c_int))  # name_displs
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Gather_Names_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Gather_Names_Callback.argtypes = [mpi4py_gather_names_func_type]
+
+# define the python callback function
+def mpi4py_gather_names_callback(buf, names, name_lengths, name_displs):
+    try:
+
+        global world_comm
+        world_size = world_comm.Get_size()
+
+        # Create numpy arrays from the C pointers
+        buf_shape = tuple( [MDI_NAME_LENGTH] )
+        buf_np = np.ctypeslib.as_array(buf, shape=buf_shape)
+        names_shape = tuple( [MDI_NAME_LENGTH * world_size] )
+        names_np = np.ctypeslib.as_array(names, shape=names_shape)
+        names_lengths_shape = tuple( [world_size] )
+        name_lengths_np = np.ctypeslib.as_array(name_lengths, shape=names_lengths_shape)
+        name_displs_np = np.ctypeslib.as_array(name_displs, shape=names_lengths_shape)
+
+        # Gather the names
+        #world_comm.Allgather([buf_np, MPI.CHAR], [names_np, MPI.CHAR])
+        world_comm.Allgatherv([buf_np, MPI.CHAR], [names_np, name_lengths_np, name_displs_np, MPI.CHAR])
+
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_gather_names_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_gather_names_callback_c = mpi4py_gather_names_func_type( mpi4py_gather_names_callback )
+def set_mpi4py_gather_names_callback():
+    global mpi4py_gather_names_callback_c
+    mdi.MDI_Set_Mpi4py_Gather_Names_Callback( mpi4py_gather_names_callback_c )
+
+##################################################
+# MPI4Py Barrier Callback                        #
+##################################################
+
+# define the type of the callback function
+mpi4py_barrier_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.c_int) # comm_flag
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Barrier_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Barrier_Callback.argtypes = [mpi4py_barrier_func_type]
+
+# define the python callback function
+def mpi4py_barrier_callback(comm_flag):
+    try:
+
+        global world_comm
+        global intra_code_comm
+
+        # get the correct communicator, based on the comm_flag
+        if comm_flag == 0: # use world_comm
+            comm = world_comm
+        elif comm_flag == 1: # use the code intra_comm
+            comm = intra_code_comm
+        else:
+            raise Exception("MDI Error: Unknown comm flag in mpi4py_barrier_callback")
+
+        if comm:
+            comm.Barrier()
+        else:
+            raise Exception("MDI Error: Unable to find mpi communicator in mpi4py_barrier_callback")
+
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_barrier_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_barrier_callback_c = mpi4py_barrier_func_type( mpi4py_barrier_callback )
+def set_mpi4py_barrier_callback():
+    global mpi4py_barrier_callback_c
+    mdi.MDI_Set_Mpi4py_Barrier_Callback( mpi4py_barrier_callback_c )
+
+##################################################
+# MPI4Py Split Callback                          #
+##################################################
+
+# define the type of the callback function
+mpi4py_split_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.c_int, # color
+                                         ctypes.c_int, # key
+                                         ctypes.c_int, # mdi_comm
+                                         ctypes.c_int) # comm_flag
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Mpi4py_Split_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Mpi4py_Split_Callback.argtypes = [mpi4py_split_func_type]
+
+# define the python callback function
+def mpi4py_split_callback(color, key, mdi_comm, comm_flag):
+    try:
+
+        global world_comm
+        global intra_code_comm
+
+        # get the correct communicator, based on the comm_flag
+        if comm_flag == 0: # create an inter-code communicator
+            mpi4py_comms[mdi_comm] = world_comm.Split(color, key)
+        elif comm_flag == 1: # create an intra-code communicator
+            intra_code_comm = world_comm.Split(color, key)
+        else:
+            raise Exception("MDI Error: Unknown comm flag in mpi4py_split_callback")
+
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in mpi4py_split_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+mpi4py_split_callback_c = mpi4py_split_func_type( mpi4py_split_callback )
+def set_mpi4py_split_callback():
+    global mpi4py_split_callback_c
+    mdi.MDI_Set_Mpi4py_Split_Callback( mpi4py_split_callback_c )
+
+##################################################
+# Launch Plugin Callback                           #
+##################################################
+
+# define the type of the callback function
+launch_plugin_func_type = ctypes.CFUNCTYPE(ctypes.c_int, # return
+                                         ctypes.c_char_p, # plugin_name
+                                         ctypes.c_char_p, # plugin_path
+                                         ctypes.POINTER(ctypes.c_byte), # plugin_state
+                                         ctypes.c_int) # mode
+
+# define the c function that allows the callback function to be set
+mdi.MDI_Set_Launch_Plugin_Callback.restype = ctypes.c_int
+mdi.MDI_Set_Launch_Plugin_Callback.argtypes = [launch_plugin_func_type]
+
+# define the python callback function
+def launch_plugin_callback(plugin_name_c, plugin_path_c, plugin_state, mode):
+    try:
+        # convert the C strings to Python values
+        plugin_name = plugin_name_c.decode('utf-8')
+        plugin_path_str = plugin_path_c.decode('utf-8')
+        plugin_path = os.path.abspath(plugin_path_str)
+
+        sys.path.append(plugin_path)
+        engine_module = importlib.import_module(plugin_name)
+        if mode == 0:
+            init_func = getattr(engine_module, "MDI_Plugin_init_" + str(plugin_name))
+        else:
+            init_func = getattr(engine_module, "MDI_Plugin_open_" + str(plugin_name))
+
+        init_func(plugin_state)
+
+        return 0
+
+    except Exception as e:
+
+        sys.stderr.write("MDI Error in launch_plugin_callback: \n" + str(e) + "\n")
+        sys.stderr.flush()
+        return -1
+
+# define the python function that will set the callback function in c
+launch_plugin_callback_c = launch_plugin_func_type( launch_plugin_callback )
+def set_launch_plugin_callback():
+    global launch_plugin_callback_c
+    mdi.MDI_Set_Launch_Plugin_Callback( launch_plugin_callback_c )
+
+
+
+
+
+
+
+
+# MDI_Get_python_plugin_mpi_world_ptr
+mdi.MDI_Get_python_plugin_mpi_world_ptr.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_void_p]
+mdi.MDI_Get_python_plugin_mpi_world_ptr.restype = ctypes.c_int
+def MDI_Get_python_plugin_mpi_world_ptr( plugin_state ):
+    python_plugin_mpi_world_ptr = ctypes.c_void_p()
+    ret = mdi.MDI_Get_python_plugin_mpi_world_ptr(ctypes.byref(python_plugin_mpi_world_ptr), plugin_state)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_python_plugin_mpi_world_ptr failed")
+    return python_plugin_mpi_world_ptr.value
+
+
+def MDI_MPI_initialization(plugin_state = None):
+    global world_comm
+    global intra_code_comm
+    global use_mpi4py
+    global MPI
+
+    # attempt to import mpi4py
+    try:
+        import mpi4py
+        mpi4py.rc.initialize = False
+        from mpi4py import MPI
+        mpi4py.rc.initialize = True
+        if MPI.Is_initialized():
+            use_mpi4py = True
+    except ImportError:
+        pass
+
+    comm = None
+    if use_mpi4py:
+        comm = MPI.COMM_WORLD
+
+    # if this is a plugin code, get the plugin's MPI communicator
+    if ( plugin_state is not None and use_mpi4py ):
+        # Get a pointer to the C MPI communicator
+        python_plugin_mpi_world_ptr = MDI_Get_python_plugin_mpi_world_ptr(plugin_state)
+
+        # Convert the C MPI communicator to an MPI4Py communicator
+        c_mpi_communicator = ctypes.cast(python_plugin_mpi_world_ptr, ctypes.POINTER(ctypes.c_void_p)).contents.value
+        handle_t = ctypes.c_void_p
+        newobj = type(MPI.COMM_WORLD)()
+        handle_new = handle_t.from_address(MPI._addressof(newobj))
+        handle_new.value = c_mpi_communicator
+        __mdi_plugin_mpi_intra_comm__ = newobj
+
+        # Confirm that the new MPI communicator works
+        __mdi_plugin_mpi_intra_comm__.Get_size()
+
+        comm = __mdi_plugin_mpi_intra_comm__
+
+    if use_mpi4py:
+        world_comm = comm
+        intra_code_comm = comm
+
+        # send basic information about the MPI communicator to the MDI libarary
+        mpi_rank = comm.Get_rank()
+        mpi_world_size = comm.Get_size()
+        mdi.MDI_Set_World_Rank(mpi_rank)
+        mdi.MDI_Set_World_Size(mpi_world_size)
+
+    # set the MPI4Py callback functions
+    set_mpi4py_recv_callback()
+    set_mpi4py_send_callback()
+    set_mpi4py_size_callback()
+    set_mpi4py_rank_callback()
+    set_mpi4py_allgather_callback()
+    set_mpi4py_gather_names_callback()
+    set_mpi4py_barrier_callback()
+    set_mpi4py_split_callback()
+
 
 # MDI_Init
-mdi.MDI_Init.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_void_p]
-mdi.MDI_Init.restype = ctypes.c_int
-def MDI_Init(arg1, comm):
-    global intra_code_comm
-    global mdi_manager
+mdi.MDI_Init_code.argtypes = []
+mdi.MDI_Init_code.restype = ctypes.c_int
+mdi.MDI_Init_with_options.argtypes = [ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Init_with_options.restype = ctypes.c_int
+def MDI_Init(arg1, arg2 = None):
+    # prepend the _language option, so that MDI knows this is a Python code
+    arg1 = "_language Python " + arg1
 
-    # append the _language option, so that MDI knows this is a Python code
-    arg1 = arg1 + " _language Python"
-
-    command = arg1.encode('utf-8')
-    if comm is None:
-        mpi_communicator_ptr = None
-    else:
-        if use_mpi4py:
-            intra_code_comm = comm
-            mpi_communicator = MPI._addressof(comm)
-            mpi_communicator_ptr = ctypes.c_void_p(mpi_communicator)
-
-            # send basic information about the MPI communicator to the MDI libarary
-            mpi_rank = comm.Get_rank()
-            mpi_world_size = comm.Get_size()
-            mdi.MDI_Set_World_Rank(mpi_rank)
-            mdi.MDI_Set_World_Size(mpi_world_size)
-        else:
-            raise Exception("MDI Error: An MPI communicator was passed to MPI_Init, but MPI4Py is not found")
-
-    # determine if the communication method is MPI
+    # determine the communication method
     args = arg1.split()
     mdi_method = None
     for i in range(len(args)):
         if args[i] == "-method" and i < len(args) - 1:
             mdi_method = args[i+1]
     if not mdi_method:
-        raise Exception("MDI Error: Unable to find -name option")
-    
-    # if the communication method is MPI, assign the names of the codes
+        raise Exception("MDI Error: Unable to find -method option")
+
     if mdi_method == "MPI":
+        # ensure that mpi4py is available
+        #if not use_mpi4py:
+        #    raise Exception("MDI Error: When using the MPI communication method, mpi4py must be available")
 
-        mdi_manager = MPI4PYManager(arg1, comm)
+        # ensure that numpy is available
+        if use_mpi4py:
+            if not found_numpy:
+                raise Exception("MDI Error: When using the MPI communication method, numpy must be available")
 
-        return 0
+    # Initialize the MDI codes vector
+    ret = mdi.MDI_Init_code()
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Init during call to MDI_Init_code failed")
 
-    else:
+    MDI_MPI_initialization()
+    set_launch_plugin_callback()
 
-        # call MDI_Init
-        ret = mdi.MDI_Init(ctypes.c_char_p(command), mpi_communicator_ptr )
+    # call MDI_Init
+    command = arg1.encode('utf-8')
+    ret = mdi.MDI_Init_with_options( ctypes.c_char_p(command) )
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Init failed")
 
     return ret
 
-def MDI_Get_Intra_Code_MPI_Comm():
+def MDI_MPI_get_world_comm():
     global intra_code_comm
-    if mdi_manager:
-        return mdi_manager.intra_code_comm
-    else:
-        return intra_code_comm
+    return intra_code_comm
+
+# Included only for backwards compatibility
+def MDI_Get_Intra_Code_MPI_Comm():
+    return MDI_MPI_get_world_comm()
+
+def MDI_MPI_set_world_comm(new_comm):
+    global intra_code_comm
+    intra_code_comm = new_comm
 
 # MDI_Accept_Communicator
 mdi.MDI_Accept_Communicator.argtypes = [ctypes.POINTER(ctypes.c_int)]
 mdi.MDI_Accept_Communicator.restype = ctypes.c_int
+def MDI_Accept_communicator():
+    comm = ctypes.c_int()
+    ret = mdi.MDI_Accept_Communicator(ctypes.byref(comm))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Accept_Communicator failed")
+    return comm.value
 def MDI_Accept_Communicator():
-    global mdi_manager
-    if mdi_manager:
-        return mdi_manager.Accept_Communicator()
-    else:
-        comm = ctypes.c_int()
-        ret = mdi.MDI_Accept_Communicator(ctypes.byref(comm))
-        if ret != 0:
-            raise Exception("MDI Error: MDI_Accept_Communicator failed")
-        return comm.value
+    return MDI_Accept_communicator()
 
 # MDI_Send
 mdi.MDI_Send.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
 mdi.MDI_Send.restype = ctypes.c_int
 def MDI_Send(arg1, arg2, arg3, arg4):
+    use_numpy = False
+    if found_numpy:
+        if type(arg1) is np.ndarray:
+            use_numpy = True
 
-    if mdi_manager:
-
-        mdi_manager.Send(arg1,arg2,arg3,arg4)
-
+    if (arg3 == MDI_INT):
+        arg_type = ctypes.c_int
+        mdi_type = MDI_INT
+        if use_numpy:
+            data_temp = arg1.astype(np.int32)
+            data = data_temp.ctypes.data_as(ctypes.c_char_p)
+    elif (arg3 == MDI_DOUBLE):
+        arg_type = ctypes.c_double
+        mdi_type = MDI_DOUBLE
+        if use_numpy:
+            data_temp = arg1.astype(np.float64)
+            data = data_temp.ctypes.data_as(ctypes.c_char_p)
+    elif (arg3 == MDI_BYTE):
+        arg_type = ctypes.c_char
+        mdi_type = MDI_BYTE
+    elif (arg3 == MDI_CHAR):
+        arg_type = ctypes.c_char
+        mdi_type = MDI_CHAR
     else:
+        raise Exception("MDI Error: Unrecognized datatype in MDI_Send")
 
-        if (arg3 == MDI_INT):
-            arg_type = ctypes.c_int
-            mdi_type = MDI_INT
-        elif (arg3 == MDI_DOUBLE):
-            arg_type = ctypes.c_double
-            mdi_type = MDI_DOUBLE
-        elif (arg3 == MDI_CHAR):
-            arg_type = ctypes.c_char
-            mdi_type = MDI_CHAR
-        elif (arg3 == MDI_INT_NUMPY):
-            if not use_numpy:
-                raise Exception("MDI Error: Attempting to use a Numpy array, but the Numpy package was not found")
-            arg_type = ctypes.c_int
-            data = arg1.astype(np.int32)
-            data = data.ctypes.data_as(ctypes.c_char_p)
-            mdi_type = MDI_INT
-        elif (arg3 == MDI_DOUBLE_NUMPY):
-            if not use_numpy:
-                raise Exception("MDI Error: Attempting to use a Numpy array, but the Numpy package was not found")
-            arg_type = ctypes.c_double
-            data = arg1.astype(np.float64)
-            data = data.ctypes.data_as(ctypes.c_char_p)
-            mdi_type = MDI_DOUBLE
+    if arg3 == MDI_CHAR:
+        data_temp = arg1.encode('utf-8')
+        data = ctypes.c_char_p(data_temp)
+    elif arg3 == MDI_BYTE:
+        data = ctypes.c_char_p(arg1)
 
-        if arg3 == MDI_CHAR:
-            data_temp = arg1.encode('utf-8')
-            data = ctypes.c_char_p(data_temp)
-
-        elif arg3 == MDI_INT or arg3 == MDI_DOUBLE:
-            if not isinstance(arg1, list):
-                if arg2 == 1:
-                    if arg3 == MDI_DOUBLE:
-                        data_temp = ctypes.pointer((ctypes.c_double)(arg1))
-                    elif arg3 == MDI_INT:
-                        data_temp = ctypes.pointer((ctypes.c_int)(arg1))
-                    data = ctypes.cast(data_temp, ctypes.POINTER(ctypes.c_char))
-                else:
-                    raise Exception("MDI Error: MDI_Send requires a list if length != 1 and datatype = MDI_INT or MDI_DOUBLE")
-            else:
-                data_temp = (arg_type*arg2)(*arg1)
+    elif (arg3 == MDI_INT or arg3 == MDI_DOUBLE or arg3 == MDI_BYTE) and not use_numpy:
+        if not isinstance(arg1, list):
+            if arg2 == 1:
+                if arg3 == MDI_DOUBLE:
+                    data_temp = ctypes.pointer((ctypes.c_double)(arg1))
+                elif arg3 == MDI_INT:
+                    data_temp = ctypes.pointer((ctypes.c_int)(arg1))
+                elif arg3 == MDI_BYTE:
+                    data_temp = ctypes.pointer((ctypes.c_char)(arg1))
                 data = ctypes.cast(data_temp, ctypes.POINTER(ctypes.c_char))
+            else:
+                raise Exception("MDI Error: MDI_Send requires a list if length != 1 and datatype = MDI_INT or MDI_DOUBLE")
+        else:
+            data_temp = (arg_type*arg2)(*arg1)
+            data = ctypes.cast(data_temp, ctypes.POINTER(ctypes.c_char))
 
-        return mdi.MDI_Send(data, arg2, ctypes.c_int(mdi_type), arg4)
+    ret = mdi.MDI_Send(data, arg2, ctypes.c_int(mdi_type), arg4)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Send failed")
 
 # MDI_Recv
 mdi.MDI_Recv.restype = ctypes.c_int
-def MDI_Recv(arg2, arg3, arg4):
-
-    if mdi_manager:
-        return mdi_manager.Recv(arg2, arg3, arg4)
-
+def MDI_Recv(arg2, arg3, arg4, buf = None):
+    if buf is None:
+        use_numpy = False
     else:
-
-        if (arg3 == MDI_INT):
-            mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            arg_type = ctypes.c_int
-            mdi_type = MDI_INT
-        elif (arg3 == MDI_DOUBLE):
-            mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            arg_type = ctypes.c_double
-            mdi_type = MDI_DOUBLE
-        elif (arg3 == MDI_CHAR):
-            mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            arg_type = ctypes.c_char
-            mdi_type = MDI_CHAR
-        elif (arg3 == MDI_INT_NUMPY):
-            if not use_numpy:
-                raise Exception("MDI Error: Attempting to use a Numpy array, but the Numpy package was not found")
-            mdi.MDI_Recv.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32, ndim=1, flags='C_CONTIGUOUS'), 
+        use_numpy = True
+    if use_numpy and not found_numpy:
+        raise Exception("MDI Error: Attempting to use a Numpy array, but the Numpy package was not found")
+    if (arg3 == MDI_INT):
+        if use_numpy:
+            mdi.MDI_Recv.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32, flags='C_CONTIGUOUS'), 
                                      ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            arg_type = ctypes.c_int
-            mdi_type = MDI_INT
-        elif (arg3 == MDI_DOUBLE_NUMPY):
-            if not use_numpy:
-                raise Exception("MDI Error: Attempting to use a Numpy array, but the Numpy package was not found")
-            mdi.MDI_Recv.argtypes = [np.ctypeslib.ndpointer(dtype=np.float64, ndim=1, flags='C_CONTIGUOUS'), 
-                                     ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            arg_type = ctypes.c_double
-            mdi_type = MDI_DOUBLE
-
-        if (arg3 == MDI_DOUBLE_NUMPY):
-            arg1 = np.zeros(arg2, dtype='float64')
-        elif (arg3 == MDI_INT or arg3 == MDI_DOUBLE or arg3 == MDI_CHAR):
-            arg_size = ctypes.sizeof(arg_type)
-            arg1 = (ctypes.c_char*(arg2*arg_size))()
-        ret = mdi.MDI_Recv(arg1, arg2, ctypes.c_int(mdi_type), arg4)
-        if ret != 0:
-            raise Exception("MDI Error: MDI_Recv failed")
-
-        if (arg3 == MDI_INT_NUMPY):
-            return arg1
-        elif (arg3 == MDI_DOUBLE_NUMPY):
-            return arg1
-
-        result = ctypes.cast(arg1, ctypes.POINTER(arg_type*arg2)).contents
-
-        if (arg3 == MDI_CHAR):
-            # if this is an MDI_CHAR, convert it to a python string
-            presult = ctypes.cast(result, ctypes.c_char_p).value
-            presult = presult.decode('utf-8')
         else:
-            if arg2 == 1:
-                presult = result[0]
-            else:
-                presult = [ result[i] for i in range(arg2) ]
+            mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        arg_type = ctypes.c_int
+        mdi_type = MDI_INT
+    elif (arg3 == MDI_DOUBLE):
+        if use_numpy:
+            mdi.MDI_Recv.argtypes = [np.ctypeslib.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS'), 
+                                     ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        else:
+            mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        arg_type = ctypes.c_double
+        mdi_type = MDI_DOUBLE
+    elif (arg3 == MDI_BYTE):
+        mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        arg_type = ctypes.c_char
+        mdi_type = MDI_BYTE
+    elif (arg3 == MDI_CHAR):
+        mdi.MDI_Recv.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        arg_type = ctypes.c_char
+        mdi_type = MDI_CHAR
+    else:
+        raise Exception("MDI Error: Unrecognized datatype in MDI_Recv")
 
-        return presult
+    if not use_numpy:
+        arg_size = ctypes.sizeof(arg_type)
+        buf = (ctypes.c_char*(arg2*arg_size))()
+
+    ret = mdi.MDI_Recv(buf, arg2, ctypes.c_int(mdi_type), arg4)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Recv failed")
+
+    if use_numpy:
+        return None
+
+    result = ctypes.cast(buf, ctypes.POINTER(arg_type*arg2)).contents
+
+    if (arg3 == MDI_CHAR):
+        # if this is an MDI_CHAR, convert it to a python string
+        presult = ctypes.cast(result, ctypes.c_char_p).value
+        presult = presult.decode('utf-8')
+    else:
+        if arg2 == 1:
+            presult = result[0]
+        else:
+            presult = [ result[i] for i in range(arg2) ]
+
+    return presult
 
 # MDI_Send_Command
 mdi.MDI_Send_Command.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int]
 mdi.MDI_Send_Command.restype = ctypes.c_int
+def MDI_Send_command(arg1, arg2):
+    command = arg1.encode('utf-8')
+    ret = mdi.MDI_Send_Command(ctypes.c_char_p(command), arg2)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Send_Command failed")
 def MDI_Send_Command(arg1, arg2):
-    if mdi_manager:
-        return mdi_manager.Send_Command(arg1, arg2)
-    else:
-        command = arg1.encode('utf-8')
-        return mdi.MDI_Send_Command(ctypes.c_char_p(command), arg2)
+    return MDI_Send_command(arg1, arg2)
 
 # MDI_Recv_Command
 mdi.MDI_Recv_Command.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int]
 mdi.MDI_Recv_Command.restype = ctypes.c_int
-def MDI_Recv_Command(arg2): 
-    if mdi_manager:
-        presult = mdi_manager.Recv_Command(arg2)
+def MDI_Recv_command(arg2): 
+    arg_size = ctypes.sizeof(ctypes.c_char)
+    arg1 = (ctypes.c_char*(MDI_COMMAND_LENGTH*arg_size))()
 
-    else:
-        arg_size = ctypes.sizeof(ctypes.c_char)
-        arg1 = (ctypes.c_char*(MDI_COMMAND_LENGTH*arg_size))()
+    ret = mdi.MDI_Recv_Command(arg1, arg2)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Recv_Command failed")
 
-        ret = mdi.MDI_Recv_Command(arg1, arg2)
-        if ret != 0:
-            raise Exception("MDI Error: MDI_Recv_Command failed")
+    result = ctypes.cast(arg1, ctypes.POINTER(ctypes.c_char*MDI_COMMAND_LENGTH)).contents
+    presult = ctypes.cast(result, ctypes.c_char_p).value
+    presult = presult.decode('utf-8')
 
-        result = ctypes.cast(arg1, ctypes.POINTER(ctypes.c_char*MDI_COMMAND_LENGTH)).contents
-        presult = ctypes.cast(result, ctypes.c_char_p).value
-        presult = presult.decode('utf-8')
+    # delete all state associated with this code
+    if presult == "EXIT":
+        delete_code_state(arg2)
 
     return presult
+def MDI_Recv_Command(arg2):
+    return MDI_Recv_command(arg2)
 
 # MDI_Conversion_Factor
 mdi.MDI_Conversion_Factor.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_double)]
 mdi.MDI_Conversion_Factor.restype = ctypes.c_int
-def MDI_Conversion_Factor(arg1, arg2):
+def MDI_Conversion_factor(arg1, arg2):
     in_unit = arg1.encode('utf-8')
     out_unit = arg2.encode('utf-8')
     conversion = ctypes.c_double()
@@ -319,3 +850,444 @@ def MDI_Conversion_Factor(arg1, arg2):
     if ret != 0:
         raise Exception("MDI Error: MDI_Conversion_Factor failed")
     return conversion.value
+def MDI_Conversion_Factor(arg1, arg2):
+    return MDI_Conversion_factor(arg1, arg2)
+
+# MDI_String_to_Atomic_Numbe
+mdi.MDI_String_to_atomic_number.argtypes = [ ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_int) ]
+mdi.MDI_String_to_atomic_number.restype = ctypes.c_int
+def MDI_String_to_atomic_number(arg1):
+    in_name = arg1.encode('utf-8')
+    atomic_number = ctypes.c_int()
+
+    ret = mdi.MDI_String_to_atomic_number(ctypes.c_char_p(in_name), ctypes.byref(atomic_number))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_String_to_atomic_number failed")
+    return atomic_number.value
+
+
+# MDI_Get_role
+mdi.MDI_Get_role.argtypes = [ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Get_role.restype = ctypes.c_int
+def MDI_Get_role():
+    role = ctypes.c_int()
+    ret = mdi.MDI_Get_Role(ctypes.byref(role))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_role failed")
+    return role.value
+def MDI_Get_Role():
+    return MDI_Get_role()
+
+
+# MDI_Get_method
+mdi.MDI_Get_method.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+mdi.MDI_Get_method.restype = ctypes.c_int
+def MDI_Get_method(comm):
+    method = ctypes.c_int()
+    ret = mdi.MDI_Get_method(ctypes.byref(method), comm)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_method failed")
+    return method.value
+
+
+# MDI_Get_communicator
+mdi.MDI_Get_communicator.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+mdi.MDI_Get_communicator.restype = ctypes.c_int
+def MDI_Get_communicator(index):
+    comm = ctypes.c_int()
+    ret = mdi.MDI_Get_communicator(ctypes.byref(comm), index)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_communicator failed")
+    return comm.value
+
+
+#####################################
+# Callback functions                #
+#####################################
+def MDI_Execute_Command_py(command, comm, class_obj):
+    global execute_command_dict
+
+    command_cast = ctypes.cast(command, ctypes.POINTER(ctypes.c_char*MDI_COMMAND_LENGTH)).contents
+    command_py = ctypes.cast(command_cast, ctypes.c_char_p).value
+    command_py = command_py.decode('utf-8')
+
+    # get the current code
+    current_code = MDI_Get_Current_Code()
+
+    class_obj_real = execute_command_dict[current_code][1]
+    ret = execute_command_dict[current_code][0](command_py, comm, class_obj_real)
+
+    if command_py == "EXIT":
+        delete_code_state(comm)
+    return ret
+
+# MDI_Set_Execute_Command_Func
+# NOTE: Do we need to use WINFUNCTYPE on Windows?
+execute_command_func_type = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_void_p)
+MDI_Execute_Command_c = execute_command_func_type( MDI_Execute_Command_py )
+mdi.MDI_Set_Execute_Command_Func.argtypes = [execute_command_func_type, ctypes.c_void_p]
+mdi.MDI_Set_Execute_Command_Func.restype = ctypes.c_int
+def MDI_Set_execute_command_func(func, class_obj):
+    global execute_command_dict
+
+    current_code = MDI_Get_Current_Code()
+
+    # store the generic execute command function for future use
+    execute_command_dict[current_code] = ( func, class_obj )
+
+    # this is just a dummy pointer; the actual object is stored in execute_command_dict
+    class_obj_pointer = ctypes.c_void_p()
+
+    ret = mdi.MDI_Set_Execute_Command_Func( MDI_Execute_Command_c, class_obj_pointer )
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Set_Execute_Command_Func failed")
+def MDI_Set_Execute_Command_Func(func, class_obj):
+    return MDI_Set_execute_command_func(func, class_obj)
+
+
+
+##################################################
+# Node / Command / Callback management functions #
+##################################################
+# MDI_Register_Node
+mdi.MDI_Register_Node.argtypes = [ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Register_Node.restype = ctypes.c_int
+def MDI_Register_node(arg1):
+    node = arg1.encode('utf-8')
+    ret = mdi.MDI_Register_Node(ctypes.c_char_p(node))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Register_Node failed")
+
+    return ret
+def MDI_Register_Node(arg1):
+    return MDI_Register_node(arg1)
+
+# MDI_Check_Node_Exists
+mdi.MDI_Check_Node_Exists.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Check_Node_Exists.restype = ctypes.c_int
+def MDI_Check_node_exists(arg1, arg2):
+    node = arg1.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    flag = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Check_Node_Exists(ctypes.c_char_p(node), arg2, flag)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Check_Node_Exists failed")
+    flag_cast = ctypes.cast(flag, ctypes.POINTER(ctypes.c_int)).contents
+
+    return flag_cast.value
+def MDI_Check_Node_Exists(arg1, arg2):
+    return MDI_Check_node_exists(arg1, arg2)
+
+# MDI_Get_NNodes
+mdi.MDI_Get_NNodes.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Get_NNodes.restype = ctypes.c_int
+def MDI_Get_nnodes(arg2):
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    nnodes = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Get_NNodes(arg2, nnodes)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_NNodes failed")
+    nnodes_cast = ctypes.cast(nnodes, ctypes.POINTER(ctypes.c_int)).contents
+
+    return nnodes_cast.value
+def MDI_Get_NNodes(arg2):
+    return MDI_Get_nnodes(arg2)
+
+# MDI_Get_Node
+mdi.MDI_Get_Node.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Get_Node.restype = ctypes.c_int
+def MDI_Get_node(index, arg2): 
+    arg_size = ctypes.sizeof(ctypes.c_char)
+    node_name = (ctypes.c_char*(MDI_COMMAND_LENGTH*arg_size))()
+
+    ret = mdi.MDI_Get_Node(index, arg2, node_name)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_Node failed")
+
+    result = ctypes.cast(node_name, ctypes.POINTER(ctypes.c_char*MDI_COMMAND_LENGTH)).contents
+    presult = ctypes.cast(result, ctypes.c_char_p).value
+    presult = presult.decode('utf-8')
+    return presult
+def MDI_Get_Node(index, arg2):
+    return MDI_Get_node(index, arg2)
+
+# MDI_Register_Command
+mdi.MDI_Register_Command.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Register_Command.restype = ctypes.c_int
+def MDI_Register_command(arg1, arg2):
+    node = arg1.encode('utf-8')
+    command = arg2.encode('utf-8')
+    ret = mdi.MDI_Register_Command(ctypes.c_char_p(node), ctypes.c_char_p(command))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_Callback failed")
+
+    return ret
+def MDI_Register_Command(arg1, arg2):
+    return MDI_Register_command(arg1, arg2)
+
+# MDI_Check_Command_Exists
+mdi.MDI_Check_Command_Exists.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Check_Command_Exists.restype = ctypes.c_int
+def MDI_Check_command_exists(arg1, command_name, arg2):
+    node = arg1.encode('utf-8')
+    command = command_name.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    flag = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Check_Command_Exists(ctypes.c_char_p(node), ctypes.c_char_p(command), arg2, flag)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Check_Command_Exists failed")
+    flag_cast = ctypes.cast(flag, ctypes.POINTER(ctypes.c_int)).contents
+
+    return flag_cast.value
+def MDI_Check_Command_Exists(arg1, command_name, arg2):
+    return MDI_Check_command_exists(arg1, command_name, arg2)
+
+# MDI_Get_NCommands
+mdi.MDI_Get_NCommands.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Get_NCommands.restype = ctypes.c_int
+def MDI_Get_ncommands(arg1, arg2):
+    node = arg1.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    ncommands = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Get_NCommands(ctypes.c_char_p(node), arg2, ncommands)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_NCommands failed")
+    ncommands_cast = ctypes.cast(ncommands, ctypes.POINTER(ctypes.c_int)).contents
+
+    return ncommands_cast.value
+def MDI_Get_NCommands(arg1, arg2):
+    return MDI_Get_ncommands(arg1, arg2)
+
+# MDI_Get_Command
+mdi.MDI_Get_Command.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Get_Command.restype = ctypes.c_int
+def MDI_Get_command(node_name, index, arg2): 
+    node = node_name.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_char)
+    command_name = (ctypes.c_char*(MDI_COMMAND_LENGTH*arg_size))()
+
+    ret = mdi.MDI_Get_Command(ctypes.c_char_p(node), index, arg2, command_name)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_Command failed")
+
+    return c_ptr_to_py_str(command_name, MDI_COMMAND_LENGTH)
+def MDI_Get_Command(node_name, index, arg2):
+    return MDI_Get_command(node_name, index, arg2)
+
+# MDI_Register_Callback
+mdi.MDI_Register_Callback.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Register_Callback.restype = ctypes.c_int
+def MDI_Register_callback(arg1, arg2):
+    node = arg1.encode('utf-8')
+    callback = arg2.encode('utf-8')
+    ret =  mdi.MDI_Register_Callback(ctypes.c_char_p(node), ctypes.c_char_p(callback))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Register_Callback failed")
+
+    return ret
+def MDI_Register_Callback(arg1, arg2):
+    return MDI_Register_callback(arg1, arg2)
+
+# MDI_Check_Callback_Exists
+mdi.MDI_Check_Callback_Exists.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Check_Callback_Exists.restype = ctypes.c_int
+def MDI_Check_callback_exists(arg1, callback_name, arg2):
+    node = arg1.encode('utf-8')
+    callback = callback_name.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    flag = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Check_Callback_Exists(ctypes.c_char_p(node), ctypes.c_char_p(callback), arg2, flag)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Check_Callback_Exists failed")
+    flag_cast = ctypes.cast(flag, ctypes.POINTER(ctypes.c_int)).contents
+
+    return flag_cast.value
+def MDI_Check_Callback_Exists(arg1, callback_name, arg2):
+    return MDI_Check_callback_exists(arg1, callback_name, arg2)
+
+# MDI_Get_NCallbacks
+mdi.MDI_Get_NCallbacks.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Get_NCallbacks.restype = ctypes.c_int
+def MDI_Get_ncallbacks(arg1, arg2):
+    node = arg1.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    ncallbacks = (ctypes.c_int*arg_size)()
+
+    ret = mdi.MDI_Get_NCallbacks(ctypes.c_char_p(node), arg2, ncallbacks)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_NCallbacks failed")
+    ncallbacks_cast = ctypes.cast(ncallbacks, ctypes.POINTER(ctypes.c_int)).contents
+
+    return ncallbacks_cast.value
+def MDI_Get_NCallbacks(arg1, arg2):
+    return MDI_Get_ncallbacks(arg1, arg2)
+
+# MDI_Get_Callback
+mdi.MDI_Get_Callback.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_char)]
+mdi.MDI_Get_Callback.restype = ctypes.c_int
+def MDI_Get_callback(node_name, index, arg2): 
+    node = node_name.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_char)
+    callback_name = (ctypes.c_char*(MDI_COMMAND_LENGTH*arg_size))()
+
+    ret = mdi.MDI_Get_Callback(ctypes.c_char_p(node), index, arg2, callback_name)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Get_Callback failed")
+
+    return c_ptr_to_py_str(callback_name, MDI_COMMAND_LENGTH)
+def MDI_Get_Callback(node_name, index, arg2):
+    return MDI_Get_callback(node_name, index, arg2)
+
+
+
+##################################################
+# Plugin functions                               #
+##################################################
+
+# MDI_Plugin_get_argc
+mdi.MDI_Plugin_get_argc.argtypes = [ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Plugin_get_argc.restype = ctypes.c_int
+def MDI_Plugin_get_argc():
+    argc = ctypes.c_int()
+    ret = mdi.MDI_Plugin_get_argc(ctypes.byref(argc))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Plugin_get_argc failed")
+    return argc.value
+
+# MDI_Plugin_get_arg
+mdi.MDI_Plugin_get_arg.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
+mdi.MDI_Plugin_get_arg.restype = ctypes.c_int
+def MDI_Plugin_get_arg(index):
+    arg = ctypes.c_char_p()
+    ret = mdi.MDI_Plugin_get_arg(index, ctypes.byref(arg))
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Plugin_get_arg failed")
+    return c_ptr_to_py_str(arg, len(arg.value) )
+
+
+def MDI_plugin_driver_callback_py(mpi_comm_ptr, mdi_comm, class_obj):
+    global driver_node_callback
+
+    # Instead of converting these values from C, use the saved values
+    mdi_comm_real = mdi_comm
+    mpi_comm_real = driver_node_callback[2]
+    class_obj_real = driver_node_callback[1]
+
+    return driver_node_callback[0](mpi_comm_real, mdi_comm_real, class_obj_real)
+
+
+# MDI_Launch_plugin
+driver_node_callback_type = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p)
+MDI_plugin_driver_callback_c = driver_node_callback_type( MDI_plugin_driver_callback_py )
+mdi.MDI_Launch_plugin.argtypes = [ctypes.POINTER(ctypes.c_char),
+                                  ctypes.POINTER(ctypes.c_char),
+                                  ctypes.POINTER(ctypes.c_void_p),
+                                  driver_node_callback_type,
+                                  ctypes.c_void_p]
+mdi.MDI_Launch_plugin.restype = ctypes.c_int
+def MDI_Launch_plugin(plugin_name, options, mpi_comm, driver_callback_func, driver_callback_obj):
+    global driver_node_callback
+
+    driver_node_callback = ( driver_callback_func, driver_callback_obj, mpi_comm )
+
+    plugin_name_c = plugin_name.encode('utf-8')
+    options_c = options.encode('utf-8')
+
+    # this is just a dummy pointer; the actual object is stored in execute_command_dict
+    class_obj_pointer = ctypes.c_void_p()
+
+    # if this is a plugin code, get the plugin's MPI communicator
+    c_mpi_communicator_ptr = ctypes.c_void_p()
+    if ( use_mpi4py and mpi_comm is not None ):
+
+        #handle_t = ctypes.c_void_p
+        handle_t = ctypes.c_void_p
+        c_mpi_communicator_ptr = handle_t.from_address(MPI._addressof(mpi_comm))
+
+    ret = mdi.MDI_Launch_plugin( ctypes.c_char_p(plugin_name_c),
+                                 ctypes.c_char_p(options_c),
+                                 c_mpi_communicator_ptr,
+                                 MDI_plugin_driver_callback_c,
+                                 class_obj_pointer )
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Launch_plugin failed")
+
+    return ret
+
+
+# MDI_Open_plugin
+mdi.MDI_Open_plugin.argtypes = [ctypes.POINTER(ctypes.c_char),
+                                  ctypes.POINTER(ctypes.c_char),
+                                  ctypes.POINTER(ctypes.c_void_p),
+                                  ctypes.POINTER(ctypes.c_int)]
+mdi.MDI_Open_plugin.restype = ctypes.c_int
+def MDI_Open_plugin(plugin_name, options, mpi_comm):
+
+    plugin_name_c = plugin_name.encode('utf-8')
+    options_c = options.encode('utf-8')
+
+    arg_size = ctypes.sizeof(ctypes.c_int)
+    mdi_comm_ptr_c = (ctypes.c_int*arg_size)()
+
+    # if this is a plugin code, get the plugin's MPI communicator
+    c_mpi_communicator_ptr = ctypes.c_void_p()
+    if ( use_mpi4py and mpi_comm is not None ):
+
+        handle_t = ctypes.c_void_p
+        c_mpi_communicator_ptr = handle_t.from_address(MPI._addressof(mpi_comm))
+
+    ret = mdi.MDI_Open_plugin( ctypes.c_char_p(plugin_name_c),
+                                 ctypes.c_char_p(options_c),
+                                 c_mpi_communicator_ptr,
+                                 mdi_comm_ptr_c )
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Open_plugin failed")
+
+    mdi_comm_py = ctypes.cast(mdi_comm_ptr_c,
+                              ctypes.POINTER(ctypes.c_int)).contents
+
+    return mdi_comm_py
+
+
+
+# MDI_Close_plugin
+mdi.MDI_Close_plugin.argtypes = [ctypes.c_int]
+mdi.MDI_Close_plugin.restype = ctypes.c_int
+def MDI_Close_plugin(mdi_comm):
+    ret = mdi.MDI_Close_plugin(mdi_comm)
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Close_plugin failed")
+    return ret
+
+
+
+# MDI_Set_plugin_state
+mdi.MDI_Set_plugin_state_internal.argtypes = [ctypes.c_void_p]
+mdi.MDI_Set_plugin_state_internal.restye = ctypes.c_int
+def MDI_Set_plugin_state(plugin_state):
+
+    # Initialize a new MDI code
+    ret = mdi.MDI_Init_code()
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Set_plugin_state failed during call to MDI_Init_code")
+
+    MDI_MPI_initialization( plugin_state=plugin_state )
+
+    ret = mdi.MDI_Set_plugin_state_internal( plugin_state )
+
+    if ret != 0:
+        raise Exception("MDI Error: MDI_Set_plugin_state failed")
+
+    return ret

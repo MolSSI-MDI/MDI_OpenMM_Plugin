@@ -4,9 +4,13 @@
 
 \section mainpage_overview_sec Overview
 
-The MolSSI Driver Interface (MDI) seeks to simplify the process of interoperating computational molecular sciences codes.
+The MolSSI Driver Interface (MDI) project provides a \ref mdi_standard "standardized API" for fast, on-the-fly communication between computational chemistry codes.
+This greatly simplifies the process of implementing methods that require the cooperation of multiple software packages and enables developers to write a single implementation that works across many different codes.
+The API is sufficiently general to support a wide variety of techniques, including QM/MM, ab initio MD, machine learning, advanced sampling, and path integral MD, while also being straightforwardly extensible.
+Communication between codes is handled by the MDI Library, which enables tight coupling between codes using either the MPI or TCP/IP methods.
+
 MDI uses a driver/engine paradigm in which \ref main_doc_drivers_sec "drivers" orchestrate complex simulations by controlling \ref main_doc_engines_sec "engines" through the use of an API-like command set that is defined by the \ref mdi_standard "MDI Standard".
-The process of communicating commands and other data between codes is handled by the \ref mainpage_overview_sec "MDI Library".
+A driver will typically implement one or more high-level methods, such as advanced sampling or QM/MM, while relying on one or more engines to perform lower-level operations, such as energy and force evaluation.
 
 In total, MDI consists of the following components:
 
@@ -26,13 +30,14 @@ MDI is designed to support a wide variety of different calculation types, with t
 Potential application areas for MDI include <em> ab initio</em> molecular dynamics (AIMD), path integral molecular dynamics (PIMD), advanced sampling, forcefield development, and QM/MM.
 More specifically, here are some examples of what can be accomplished using MDI:
 
-  - Run an <em> ab initio</em> molecular dynamics (AIMD) calculation in which a quantum mechanics (QM) code calculates nuclear forces and a molecular mechancis (MM) code performs the time integration.
+  - Run an <em> ab initio</em> molecular dynamics (AIMD) calculation in which a quantum mechanics (QM) code evaluates nuclear forces and a molecular mechanics (MM) code performs time integration.
   - Run an MD simulation in which the nuclear forces include contributions from two different MM codes.
   - Implement an advanced sampling technique (<em>i.e.</em> metadynamics, replica exchange, etc.) in a self-contained driver that can use other codes to compute forces.
   - Implement a new forcefield in a self-contained engine that is compatible with multiple MM codes.
   - Run QM/MM simulations.
 
-Creation of unofficial extensions to the MDI Standard is straightforward.
+More generally, MDI can support any use case that can be implemented using the \ref command_list "command set" defined by the \ref mdi_standard "MDI Standard".
+For use cases that require additional commands, unofficial extensions to the MDI Standard can be straightforwardly developed.
 Feel free to contact us if your use case requires additions to the MDI Standard, and we may be able to provide advice about the process.
 Extensions that prove useful to the broader community may be considered for official incorporation into the MDI Standard.
 
@@ -52,13 +57,14 @@ For lists of available MDI-based drivers and engines, see \ref main_doc_drivers_
 
 \section source_sec Source Code
 
-The source code of the MDI library is available at GitHub at https://github.com/MolSSI/MDI_Library
+The source code of the MDI library is available at GitHub at https://github.com/MolSSI/MDI_Library.
 
 \section main_doc_sec Main Documentation
 
   - \ref tutorials
     - \ref user_tutorial
     - \ref aimd_tutorial
+    - \ref engine_tutorial
 
   - \ref mdi_standard
 
@@ -72,21 +78,31 @@ The following codes can be directly run as MDI engines:
 
   - \ref ecosystem_lammps
 
+  - \ref ecosystem_openmm
+
   - \ref ecosystem_psi4
 
   - \ref ecosystem_qcengine
 
   - \ref ecosystem_qe
 
+  - \ref ecosystem_tinker
+
 Through \ref ecosystem_qcengine, it is additionally possible to control the following codes via MDI:
+
+  - \ref <a href="https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dft-d3/">DFT-D3</a>
+
+  - \ref <a href="https://www.entos.info/">entos</a>
 
   - \ref <a href="http://www.petachem.com/">PetaChem</a>
 
   - \ref <a href="https://www.molpro.net/">Molpro</a>
 
-  - \ref <a href="https://github.com/aiqm/torchani">TorchANI</a>
+  - \ref <a href="http://openmopac.net/">MOPAC</a>
 
   - \ref <a href="http://rdkit.org/">RDKit</a>
+
+  - \ref <a href="https://github.com/aiqm/torchani">TorchANI</a>
 
 The following codes support <a href="http://ipi-code.org/">i-PI</a>, with which MDI is compatible (see the \ref library_launching_sec "-ipi" option).  Note that the i-PI command set is different from that of the MDI Standard.
 
@@ -133,5 +149,13 @@ The MDI Library is released under the 3-Clause BSD License. See the LICENSE file
 
 This work was supported by the Molecular Sciences Software Institute under U.S. National Science Foundation grant ACI-1547580.
 
-**/
+MDI builds upon the work of numerous development groups, without whom it could not exist.
+The syntactical structure of the MDI Standard, including the fundamental command-response communication pattern, is modelled after that used by the <a href="http://ipi-code.org/">i-PI</a> project, as is the string-based representation of commands.
+The \ref standard_nodes_sec "Node System" draws inspiration from the techniques used by several molecular mechanics packages, especially <a href="https://lammps.sandia.gov/">LAMMPS</a> and <a href="http://openmm.org/">OpenMM</a>, to enable modular code additions.
+The unit conversions available through the MDI Library were provided by the <a href="https://github.com/MolSSI/QCElemental">QCElemental</a> project.
+Certain details of the communication protocols implemented by the MDI Library, especially pertaining to MPI-based communication in the MPMD regime, were informed by the accomplishments of the <a href="https://cslib.sandia.gov/">CSlib</a> library.
+The library-based communication protocol was developed in response to discussions with the <a href="https://gitlab.com/exaalt">EXAALT</a> team.
+The interface, error handling, data types, and numerous other elements of the MDI Library are modelled after the <a href="https://www.mpi-forum.org/">MPI Standard</a>.
+A distribution of the MDI Library for Python is provided by <a href="https://conda-forge.org/">Conda Forge</a>.
 
+**/
