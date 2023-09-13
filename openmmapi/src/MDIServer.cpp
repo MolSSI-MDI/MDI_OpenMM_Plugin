@@ -36,7 +36,7 @@
 #include "openmm/internal/AssertionUtilities.h"
 #include "ExampleKernels.h"
 #include "openmm/internal/ContextImpl.h"
-#include <mpi.h>
+//#include <mpi.h>
 #include <string.h>
 
 using namespace ExamplePlugin;
@@ -45,14 +45,24 @@ using namespace std;
 
 MDIServer::MDIServer(string mdi_options) {
     // Initialize MPI
-    MPI_Init(NULL, NULL);
-    MPI_Comm world_comm = MPI_COMM_WORLD;
+    //MPI_Init(NULL, NULL);
+    //MPI_Comm world_comm = MPI_COMM_WORLD;
 
     // Initialize MDI
     int ierr;
-    const char *options = mdi_options.c_str();
+    //char *options = mdi_options.c_str();
+    vector<char> mdi_options_vector(mdi_options.begin(), mdi_options.end());
+    char* options = &mdi_options_vector[0];
+    int argc = 2;
+    char **argv = (char**)malloc(sizeof(char*)*2);
+    char *mdi_char = (char*)malloc(sizeof(char)*16);
+    snprintf(mdi_char, 16, "%s", "-mdi");
+    argv[0] = mdi_char;
+    argv[1] = options;
     printf("   Engine calling mdi_init\n");
-    ierr = MDI_Init(options, &world_comm);
+    ierr = MDI_Init(&argc, &argv);
+    free(mdi_char);
+    free(argv);
     if ( ierr != 0 ) {
       throw OpenMMException("Unable to initialize MDI\n");
     }
@@ -164,9 +174,11 @@ MDIServer::MDIServer(string mdi_options) {
     target_node[0] = '\0';
 }
 
+/*
 MDIServer::~MDIServer() {
     MPI_Finalize();
 }
+*/
 
 void MDIServer::setActive(bool active) {
   this->is_active = active;
@@ -217,7 +229,7 @@ std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel)
       printf("   MDI COMMAND: %s\n",command);
 
       // Confirm that this command is supported
-      MDI_Check_Command_Exists(node.c_str(), command, MDI_NULL_COMM, &supported);
+      MDI_Check_Command_Exists(node.c_str(), command, MDI_COMM_NULL, &supported);
       if ( supported != 1 ) {
 	throw OpenMMException("Received unsupported MDI command\n");
       }
