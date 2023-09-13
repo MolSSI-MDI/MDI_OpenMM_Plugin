@@ -174,11 +174,11 @@ MDIServer::MDIServer(string mdi_options) {
     target_node[0] = '\0';
 }
 
-/*
+
 MDIServer::~MDIServer() {
-    MPI_Finalize();
+    //MPI_Finalize();
 }
-*/
+
 
 void MDIServer::setActive(bool active) {
   this->is_active = active;

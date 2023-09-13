@@ -1,5 +1,5 @@
-import simtk.openmm as mm
-import simtk.openmm.app as mmapp
+import openmm as mm
+import openmm.app as mmapp
 import simtk.unit as mmunit
 from .openmmmdi import ExampleForce, MDIServer
 

@@ -1,6 +1,6 @@
 %module openmmmdi
 
-%import(module="simtk.openmm") "swig/OpenMMSwigHeaders.i"
+%import(module="openmm") "swig/OpenMMSwigHeaders.i"
 %include "swig/typemaps.i"
 %include "std_string.i"
 
@@ -27,7 +27,7 @@ namespace std {
 %}
 
 %pythoncode %{
-import simtk.openmm as mm
+import openmm as mm
 import simtk.unit as unit
 %}
 
