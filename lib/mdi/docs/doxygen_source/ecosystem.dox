@@ -8,21 +8,15 @@ This section provides basic usage instructions for the drivers, engines, and oth
 
 \section ecosystem_lammps LAMMPS
 
-MolSSI provides <a href="https://github.com/MolSSI/lammps/tree/mdi">an MDI-enabled fork</a> of <a href="https://lammps.sandia.gov/">LAMMPS</a> that can be run as an MDI engine.
 To use LAMMPS as an engine, follow these steps:
 
   -#
-Acquire the MDI-enabled fork of LAMMPS:
-
-    git clone --branch mdi git@github.com:MolSSI/lammps.git
-
-  -#
-Compile LAMMPS, following the <a href="https://lammps.sandia.gov/doc/Build.html">LAMMPS build guide</a>.
+Acquire and compile LAMMPS, following the <a href="https://lammps.sandia.gov/doc/Build.html">LAMMPS build guide</a>.
+You will need to <a href="https://docs.lammps.org/Build_extras.html">enable the USER-MDI package</a> when building LAMMPS.
 
   -#
 Prepare a LAMMPS input file that specifies the initial molecular geometry of the system, the force field to be used, and any other desired settings.
-The file must include the <b>mdi fix</b>.
-At the end of the input file, call the \b mdi command, which does not accept any arguments.
+At the end of the input file, call the \b mdi/engine command, which does not accept any arguments.
 For example:
 
     units           real
@@ -49,12 +43,11 @@ For example:
     
     thermo_style    multi
     thermo          1
-    
-    fix             1 all mdi
-    fix             2 all nvt temp 300.0 300.0 70.0
-    fix             3 all shake 0.0001 20 0 b 1 a 1
 
-    mdi
+    fix             1 all nvt temp 300.0 300.0 70.0
+    fix             2 all shake 0.0001 20 0 b 1 a 1
+
+    mdi/engine
 
   -#
 Launch LAMMPS using the \"\c -mdi\" runtime option, which is described in \ref library_launching_sec.
@@ -64,22 +57,47 @@ For example:
 
 
 
+\section ecosystem_openmm OpenMM
+
+<a href="https://github.com/taylor-a-barnes/MDI_OpenMM_Plugin">An MDI plugin</a> for <a href="http://openmm.org/">OpenMM</a> is available that enables OpenMM to be run as an MDI engine.
+To use OpenMM as an engine, follow these steps:
+
+  -#
+Install OpenMM
+
+  -#
+Install the OpenMM MDI plugin
+
+  -#
+Prepare OpenMM input files that specify the initial molecular geometry of the system and any other desired settings.
+
+  -#
+In the OpenMM run script, replace the normal call to \c Simulation  with a call to \c MDISimulation, which requires a new argument that corresponds to the MDI runtime options.
+For example:
+
+    simulation = MDISimulation("-name MM -role ENGINE -method TCP -port 8021 -hostname localhost", pdb.topology, system, integrator, platform)
+
+  -#
+At the end of the run script (or at whatever point OpenMM should begin accepting commands from the driver) call the \c runMDI() function on the \c MDISimulation object you created in the last step:
+
+    simulation.runMDI()
+
+
+
 \section ecosystem_psi4 Psi4
 
-MolSSI provides <a href="https://github.com/MolSSI/psi4/tree/mdi">an MDI-enabled fork</a> of <a href="http://www.psicode.org/">Psi4</a> that can be run as an MDI engine.
 To use Psi4 as an engine, follow these steps:
 
   -#
-Acquire the MDI-enabled fork of Psi4:
-
-    git clone --branch mdi git@github.com:MolSSI/psi4.git
+Install MDI as a Python package, using either Conda (`conda install -c conda-forge pymdi`) or pip (`pip install pymdi`).
 
   -#
-Compile Psi4, following the <a href="http://www.psicode.org/psi4manual/master/external.html">Psi4 installation guide</a>.
+Acquire and compile Psi4, following the <a href="http://www.psicode.org/psi4manual/master/external.html">Psi4 installation guide</a>.
+Installing via Conda is recommended.
 
   -#
 Prepare a Psi4 input file that specifies the initial molecular geometry of the system and any other desired settings.
-At the end of the input file, call the \b mdi command, which accepts as its only argument the computational method that should be used for any energy or gradient calculations that are requested by the driver.
+At the end of the input file, call the \b energy command with the `mdi=True` optional argument.
 For example:
 
     molecule {
@@ -88,7 +106,7 @@ For example:
     H 4.87602 4.14701 0.667997
     }
     
-    mdi("scf/sto-3g")
+    energy("scf/sto-3g", mdi=True)
 
   -#
 Launch Psi4 using the \"\c --mdi\" runtime option, which is described in \ref library_launching_sec.
@@ -102,7 +120,6 @@ For example:
 
 \section ecosystem_qcengine QCEngine
 
-The <a href="https://github.com/MolSSI/QCEngine">current master branch</a> of QCEngine can be run as an MDI engine.
 To use QCEngine as an MDI engine, follow these steps:
 
   -#
@@ -116,11 +133,11 @@ For example:
     import qcengine as qcng
     import qcelemental as qcel
 
-    molecule {
-    O 4.92718 4.99809 1.10308
-    H 5.80905 5.31488 0.90767
-    H 4.87602 4.14701 0.667997
-    }
+    mol = qcel.models.Molecule.from_data("""
+    O  0.0  0.000  -0.129
+    H  0.0 -1.494  1.027
+    H  0.0  1.494  1.027
+    """)
     
     o = qcng.MDIServer(mdi_options = "-role ENGINE -name QM -method TCP -port 8021 -hostname localhost",
                        program = "psi4",
@@ -145,18 +162,57 @@ To use QE as an engine, follow these steps:
   -#
 Acquire the MDI-enabled fork of QE:
 
-    git clone --branch mdi git@github.com:MolSSI/q-e.git
+    git clone --branch mdi_plugin https://github.com/MolSSI-MDI/q-e.git
 
   -#
-Compile pw.x, following the <a href="https://www.quantum-espresso.org/Doc/user_guide/node10.html">QE build guide</a>.
+Configure QE.
+You will need to configure QE to be compiled with position-independent code.
+If using GCC compilers, you can acomplish this by passing the \c "-fPIC" flag to the \c "FFLAGS", \c "FCFLAGS", \c "CFLAGS", and \c "try_foxflags" configuration options.
+For example:
+
+    cd q-e
+    ./configure --enable-parallel --enable-openmp --enable-shared FFLAGS="-fPIC" FCFLAGS="-fPIC" CFLAGS="-fPIC" try_foxflags="-fPIC -cpp"
+
+For additional information about configuring QE, see the <a href="https://www.quantum-espresso.org/Doc/user_guide/node10.html">QE build guide</a>.
+
+  -#
+Compile \c "qemdi.x".
+
+    make mdi
 
   -#
 Prepare a QE input file that specifies the initial molecular geometry of the system and any other desired settings.
 
   -#
-Launch QE using the \"\c -mdi\" runtime option, which is described in \ref library_launching_sec.
+Launch QE using the \c "qemdi.x" executable (which is located in \c "q-e/MDI/src") \"\c -mdi\" runtime option, which is described in \ref library_launching_sec.
 For example:
 
-    pw.x -in qe.in -mdi "-role ENGINE -name my_name -method TCP -port 8021 -hostname localhost" &
+    qemdi.x -in qe.in -mdi "-role ENGINE -name my_name -method TCP -port 8021 -hostname localhost" &
+
+  -#
+The \c "q-e/MDI/src" directory also contains a QE MDI Plugin, called \c "qemdi".
+
+
+\section ecosystem_tinker Tinker
+
+<a href="https://github.com/taylor-a-barnes/Tinker/tree/mdi">An MDI-enabled fork</a> of <a href="https://dasher.wustl.edu/tinker/">Tinker</a> is available that can be run as an MDI engine.
+To use Tinker as an engine, follow these steps:
+
+  -#
+Acquire the MDI-enabled fork of Tinker:
+
+    git clone --branch mdi git@github.com:taylor-a-barnes/Tinker.git
+
+  -#
+Compile dynamic.x, following the <a href="https://dasher.wustl.edu/tinker/downloads/guide.pdf">Tinker build guide</a>.
+
+  -#
+Prepare Tinker input files that specify the initial molecular geometry of the system and any other desired settings.
+
+  -#
+Launch Tinker using the \"\c -mdi\" runtime option, which is described in \ref library_launching_sec.
+For example:
+
+    dynamic.x input -mdi "-role ENGINE -name MM -method TCP -port 8021 -hostname localhost" 1000 1.0 10.0 2 298.0 778.0
 
 **/
