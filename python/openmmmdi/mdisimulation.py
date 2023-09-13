@@ -16,13 +16,13 @@ class MDISimulation(mmapp.Simulation):
     def runMDI(self):
         self.mdi_force.setActive(True, self.context)
 
-        command = "@GLOBAL"
+        command = "@DEFAULT"
         current_simulation = ""
         while command != "EXIT":
 
-            if command == "@GLOBAL":
+            if command == "@DEFAULT":
                 current_simulation = ""
-                self.mdi_force.mdiListen("@GLOBAL", self.context)
+                self.mdi_force.mdiListen("@DEFAULT", self.context)
 
             elif command == "@INIT_MD":
                 current_simulation = "MD"

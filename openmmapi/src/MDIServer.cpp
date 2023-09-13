@@ -66,23 +66,24 @@ MDIServer::MDIServer(string mdi_options) {
     if ( ierr != 0 ) {
       throw OpenMMException("Unable to initialize MDI\n");
     }
-    // Register the @GLOBAL node
-    MDI_Register_Node("@GLOBAL");
-    MDI_Register_Command("@GLOBAL", "<COORDS");
-    MDI_Register_Command("@GLOBAL", ">COORDS");
-    MDI_Register_Command("@GLOBAL", "EXIT");
-    MDI_Register_Command("@GLOBAL", "<VELOCITIES");
-    MDI_Register_Command("@GLOBAL", ">VELOCITIES");
-    MDI_Register_Command("@GLOBAL", "<FORCES");
-    MDI_Register_Command("@GLOBAL", "<TIME");
-    MDI_Register_Command("@GLOBAL", "<NATOMS");
-    MDI_Register_Command("@GLOBAL", "<CHARGES");
-    MDI_Register_Command("@GLOBAL", "<DIMENSIONS");
-    MDI_Register_Command("@GLOBAL", "<CELL");
-    MDI_Register_Command("@GLOBAL", ">CELL");
-    MDI_Register_Command("@GLOBAL", "<MASSES");
-    MDI_Register_Command("@GLOBAL", "@");
-    MDI_Register_Command("@GLOBAL", "@INIT_MD");
+    // Register the @DEFAULT node
+    MDI_Register_Node("@DEFAULT");
+    MDI_Register_Command("@DEFAULT", "<COORDS");
+    MDI_Register_Command("@DEFAULT", ">COORDS");
+    MDI_Register_Command("@DEFAULT", "EXIT");
+    MDI_Register_Command("@DEFAULT", "<VELOCITIES");
+    MDI_Register_Command("@DEFAULT", ">VELOCITIES");
+    MDI_Register_Command("@DEFAULT", "<FORCES");
+    MDI_Register_Command("@DEFAULT", "<TIME");
+    MDI_Register_Command("@DEFAULT", "<NATOMS");
+    MDI_Register_Command("@DEFAULT", "<CHARGES");
+    MDI_Register_Command("@DEFAULT", "<DIMENSIONS");
+    MDI_Register_Command("@DEFAULT", "<CELL");
+    MDI_Register_Command("@DEFAULT", ">CELL");
+    MDI_Register_Command("@DEFAULT", "<MASSES");
+    MDI_Register_Command("@DEFAULT", "@");
+    MDI_Register_Command("@DEFAULT", "@INIT_MD");
+    MDI_Register_Command("@DEFAULT", "<@");
 
     // Register the @INIT_MD node
     MDI_Register_Node("@INIT_MD");
@@ -101,9 +102,10 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@INIT_MD", "<MASSES");
     MDI_Register_Command("@INIT_MD", "@");
     MDI_Register_Command("@INIT_MD", "@ENERGY");
-    MDI_Register_Command("@INIT_MD", "@GLOBAL");
+    MDI_Register_Command("@INIT_MD", "@DEFAULT");
     MDI_Register_Command("@INIT_MD", "@FORCES");
     MDI_Register_Command("@INIT_MD", "@UPDATE");
+    MDI_Register_Command("@INIT_MD", "<@");
 
     // Register the @UPDATE node
     MDI_Register_Node("@UPDATE");
@@ -123,11 +125,12 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@UPDATE", "@");
     MDI_Register_Command("@UPDATE", "@ENERGY");
     MDI_Register_Command("@UPDATE", "@FORCES");
-    MDI_Register_Command("@UPDATE", "@GLOBAL");
+    MDI_Register_Command("@UPDATE", "@DEFAULT");
     MDI_Register_Command("@UPDATE", "@UPDATE");
     MDI_Register_Callback("@UPDATE", ">COORDS");
     MDI_Register_Callback("@UPDATE", ">CELL");
     MDI_Register_Callback("@UPDATE", ">VELOCITIES");
+    MDI_Register_Command("@UPDATE", "<@");
 
     // Register the @FORCES node
     MDI_Register_Node("@FORCES");
@@ -143,9 +146,10 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@FORCES", "@");
     MDI_Register_Command("@FORCES", "@ENERGY");
     MDI_Register_Command("@FORCES", "@FORCES");
-    MDI_Register_Command("@FORCES", "@GLOBAL");
+    MDI_Register_Command("@FORCES", "@DEFAULT");
     MDI_Register_Command("@FORCES", "@UPDATE");
     MDI_Register_Callback("@FORCES", "+FORCES");
+    MDI_Register_Command("@FORCES", "<@");
 
     // Register the @ENERGY node
     MDI_Register_Node("@ENERGY");
@@ -158,8 +162,9 @@ MDIServer::MDIServer(string mdi_options) {
     MDI_Register_Command("@ENERGY", "@");
     MDI_Register_Command("@ENERGY", "@ENERGY");
     MDI_Register_Command("@ENERGY", "@FORCES");
-    MDI_Register_Command("@ENERGY", "@GLOBAL");
+    MDI_Register_Command("@ENERGY", "@DEFAULT");
     MDI_Register_Command("@ENERGY", "@UPDATE");
+    MDI_Register_Command("@ENERGY", "<@");
 
     // Accept the MDI communicator
     printf("   Engine calling mdi_accept_communicator\n");
@@ -229,7 +234,9 @@ std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel)
       printf("   MDI COMMAND: %s\n",command);
 
       // Confirm that this command is supported
-      MDI_Check_Command_Exists(node.c_str(), command, MDI_COMM_NULL, &supported);
+      vector<char> node_name_vector(node.begin(), node.end());
+      char* node_name_char = &node_name_vector[0];
+      MDI_Check_Command_Exists(node_name_char, command, MDI_COMM_NULL, &supported);
       if ( supported != 1 ) {
 	throw OpenMMException("Received unsupported MDI command\n");
       }
@@ -292,6 +299,9 @@ std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel)
       else if ( strcmp( command, ">VELOCITIES" ) == 0 ) {
 	this->recv_velocities(context);
       }
+      else if ( strcmp( command, "<@" ) == 0 ) {
+        MDI_Send(node_name_char, MDI_COMMAND_LENGTH, MDI_CHAR, this->mdi_comm);
+      }
       else if ( strcmp( command, "@" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
@@ -301,7 +311,7 @@ std::string MDIServer::listen(string node, ContextImpl& context, Kernel& kernel)
       else if ( strcmp( command, "@FORCES" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
-      else if ( strcmp( command, "@GLOBAL" ) == 0 ) {
+      else if ( strcmp( command, "@DEFAULT" ) == 0 ) {
 	strcpy( this->target_node, command );
       }
       else if ( strcmp( command, "@INIT_MD" ) == 0 ) {
